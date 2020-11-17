@@ -8,6 +8,7 @@ dash_core_components==1.13.0
 dash_html_components==1.1.1
 dash-auth==1.4.1
 pymongo==3.11.0
-dnspython==1.16.0
-pykerberos==1.2.1
-python-snappy==0.5.4
+dnspython==2.0.0
+Flask-Login==0.5.0
+# pykerberos==1.2.1
+# python-snappy==0.5.4
