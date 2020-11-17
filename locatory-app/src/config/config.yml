@@ -1,0 +1,14 @@
+COMMON: &common
+  mongo:
+    dbname: locatorydb
+    password: tzNtakzxBnWmq22
+
+DEVELOPMENT: &development
+  <<: *common
+  DEBUG: True
+
+STAGING: &staging
+  <<: *common
+
+PRODUCTION: &production
+  <<: *common
