@@ -3,5 +3,5 @@
 
 ### Installation
 1) Install the dependencies from `requirements.txt`
-2) Run the `app.py` -> this will spawn an embedded flask server.
+2) Run the `index.py` -> this will spawn an embedded flask server.
 
