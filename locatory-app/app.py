@@ -4,6 +4,18 @@ import dash
 from flask_login import LoginManager, UserMixin
 
 from apps.user.user import AppUser
+from dash import dash
+import dash_bootstrap_components as dbc
+import dash_html_components as html
+import os
+import pandas as pd
+import dash_core_components as dcc
+from dash.dependencies import Output, Input, State
+import plotly.graph_objects as go
+import dash_bootstrap_components as dbc
+
+mapbox_access_token = 'pk.eyJ1IjoiYWhzLXZhIiwiYSI6ImNraGsyMWVmdDByOWszNnNkdzJqcHpwOWMifQ.llITOAaVvDUflVgenIPPlw'
+
 
 app = dash.Dash(__name__, suppress_callback_exceptions=True,
                 meta_tags=[{'name': 'viewport',
@@ -35,3 +47,6 @@ class User(UserMixin):
 def load_user(user_id):
     user_json = AppUser().get_customer_data(user_id)
     return User(user_json)
+
+
+

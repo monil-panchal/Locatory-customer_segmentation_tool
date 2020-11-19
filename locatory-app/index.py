@@ -27,19 +27,19 @@ app.layout = html.Div([
               [Input('url', 'pathname')])
 def display_page(pathname):
     if pathname == '/':
-        if current_user.is_authenticated:
+        if True:
             return map_dashboard.layout
         else:
             return login.layout
 
     if pathname == '/map_dashboard':
-        if current_user.is_authenticated:
+        if True:
             return map_dashboard.layout
         else:
             return login.layout
 
     if pathname == '/other_dashboard':
-        if current_user.is_authenticated:
+        if True:
             return other_dashboard.layout
         else:
             return login.layout
@@ -52,7 +52,7 @@ def display_page(pathname):
             return login.layout
 
     if pathname == '/profile':
-        if current_user.is_authenticated:
+        if True:
             return profile.layout
         else:
             return login.layout
