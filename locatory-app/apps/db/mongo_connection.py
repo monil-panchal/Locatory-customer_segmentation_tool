@@ -8,5 +8,5 @@ class PyMongo:
 
     def get_db_connection(self):
         client = MongoClient(
-            f"mongodb+srv://admin:{self.password}@cluster0.slfeg.mongodb.net/{self.dbname}?retryWrites=true&w=majority")
+            f"mongodb+srv://admin:{self.password}@cluster0.slfeg.mongodb.net/{self.dbname}?retryWrites=true&w=majority&ssl=true&ssl_cert_reqs=CERT_NONE")
         return client.get_database()

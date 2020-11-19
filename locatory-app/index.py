@@ -65,7 +65,7 @@ def navBar(input1):
     if current_user.is_authenticated:
         navBarContents = [
             dbc.NavItem(dbc.NavLink('Map Dashboard', href='/map_dashboard')),
-            dbc.NavItem(dbc.NavLink('Other Dashboard', href='/other_dashboard')),
+            dbc.NavItem(dbc.NavLink('Default RFM Dashboard', href='/other_dashboard')),
             dbc.DropdownMenu(
                 nav=True,
                 in_navbar=True,
