@@ -1,8 +1,9 @@
-from fastapi import APIRouter
-
-rfm_router = APIRouter()
+from fastapi import APIRouter, HTTPException, status
 
 
-@rfm_router.get("/users/", tags=["users"])
-async def read_users():
-    return [{"username": "Foo"}, {"username": "Bar"}]
+router = APIRouter()
+
+
+@router.post("/perform_rfm_segmentation/", response_model=bool)
+async def perform_rfm_segmentation():
+    return True

@@ -51,8 +51,8 @@ class Security:
         return sys_username
 
     def verify_token_username(self, token_username):
-        if token_username == cfg.USERNAME:
-            return cfg.USERNAME
+        if token_username == self.get_system_username():
+            return True
 
         return False
 

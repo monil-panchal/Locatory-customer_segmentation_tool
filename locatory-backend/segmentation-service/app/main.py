@@ -4,8 +4,9 @@ from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 # Application imports
-from configs import cfg
-from security import Security, Token, TokenData
+from .configs import cfg
+from .security import Security, Token, TokenData
+from .api.rfm import endpoints
 
 # Password: EIsegmentation@2020#4
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -13,7 +14,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 app = FastAPI()
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme)):
+async def is_user_authorized(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -30,17 +31,18 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     except JWTError:
         raise credentials_exception
 
-    user = sec_instance.verify_token_username(
+    is_authorized = sec_instance.verify_token_username(
         token_username=token_data.sys_username)
 
-    if user is None:
+    if not is_authorized:
         raise credentials_exception
 
-    return user
+    return is_authorized
 
 
 @app.post("/token", response_model=Token)
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm =
+                                 Depends()):
     """ Endpoint to get access token
     """
     sec_instance = Security.get_instance()
@@ -63,6 +65,10 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@app.get('/')
-async def index(current_user: str = Depends(get_current_user)):
-    return {"Real": "Python"}
+app.include_router(
+    endpoints.router,
+    prefix="/rfm",
+    tags=["rfm"],
+    dependencies=[Depends(is_user_authorized)],
+    responses={404: {"description": "Not found"}},
+)
