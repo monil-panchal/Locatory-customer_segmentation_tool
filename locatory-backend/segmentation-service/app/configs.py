@@ -18,6 +18,11 @@ class GlobalConfig(BaseSettings):
     PASSWORD: str = None
     SECRET_KEY: str = None
     ACCESS_TOKEN_EXPIRE_MINUTES: int = None
+    LOG_PATH: str = None
+    MONGODB_URL: str = None
+    MONGODB_PORT: int = None
+    MONGODB_USERNAME: str = None
+    MONGODB_PASSWORD: str = None
 
     class Config:
         env_file: str = ".env"

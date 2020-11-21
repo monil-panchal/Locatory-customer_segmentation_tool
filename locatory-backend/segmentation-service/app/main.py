@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta
 from jose import JWTError
 from fastapi import Depends, FastAPI, HTTPException, status
@@ -6,7 +7,12 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 # Application imports
 from .configs import cfg
 from .security import Security, Token, TokenData
+from .log import Log
 from .api.rfm import endpoints
+
+# Initialize logs
+log_instance = Log()
+log_instance.init_logs()
 
 # Password: EIsegmentation@2020#4
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
