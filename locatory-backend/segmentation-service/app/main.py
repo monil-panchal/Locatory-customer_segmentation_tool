@@ -11,8 +11,8 @@ from .log import Log
 from .api.rfm import endpoints
 
 # Initialize logs
-log_instance = Log()
-log_instance.init_logs()
+Log.get_instance().init_logs()
+logger = Log.get_instance().root_logger
 
 # Password: EIsegmentation@2020#4
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
