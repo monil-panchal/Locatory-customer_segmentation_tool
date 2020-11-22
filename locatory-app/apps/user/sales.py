@@ -72,29 +72,28 @@ class Sales:
             city = data['city']
 
             queries = []
-            year_query = { '$expr': {'$eq': [{'$year': '$order_date'}, year]} }
+            year_query = {'$expr': {'$eq': [{'$year': '$order_date'}, year]}}
             queries.append(year_query)
 
             if month:
-                month_query = { '$expr': {'$eq': [{'$month': '$order_date'}, month]} }
+                month_query = {'$expr': {'$eq': [{'$month': '$order_date'}, month]}}
                 queries.append(month_query)
 
-            country_query= {'customer.address.customer_country': country}
+            country_query = {'customer.address.customer_country': country}
             queries.append(country_query)
 
             if state:
-                state_query= {'customer.address.customer_state': state}
+                state_query = {'customer.address.customer_state': state}
                 queries.append(state_query)
 
             if city:
-                city_query= {'customer.address.customer_city': city}
+                city_query = {'customer.address.customer_city': city}
                 queries.append(city_query)
 
             dashboard_data_query = {
                 '$and': queries
             }
             print(f'dashboard_data_query: {dashboard_data_query}')
-
 
             orders = []
             cursor = self.db.Orders.find(dashboard_data_query)

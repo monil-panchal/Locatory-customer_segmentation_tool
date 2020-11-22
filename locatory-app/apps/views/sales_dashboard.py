@@ -12,7 +12,8 @@ from app import app
 
 time_line = {}
 geo_data = {}
-dashboard_data_stat ={}
+dashboard_data_stat = {}
+
 
 def process_dashboard_data(sales_dashboard_df: pd.DataFrame):
     if not sales_dashboard_df.empty:
@@ -36,7 +37,11 @@ def process_dashboard_data(sales_dashboard_df: pd.DataFrame):
 
         print(f'updated dashboard_data_stat is: {dashboard_data_stat}')
 
-    pass
+    else:
+        print('Zero records retrieved')
+        for (x, y) in dashboard_data_stat.items():
+            dashboard_data_stat[x] = 0
+        pass
 
 
 def fetch_timelines():
@@ -78,7 +83,7 @@ card_dashboard_stat = dbc.CardDeck(
             dbc.CardBody(
                 [
                     html.H5("Total sales", className="card-title"),
-                    html.Br(),html.Br(),
+                    html.Br(), html.Br(),
                     html.H4(id='total_sales', className="text-info")
                 ]
             ), color="info", outline=True
@@ -88,7 +93,7 @@ card_dashboard_stat = dbc.CardDeck(
                 [
                     html.H5("Highest order value", className="card-title"),
                     html.Br(),
-                    html.H4(id='highest_order_value', className="text-success",)
+                    html.H4(id='highest_order_value', className="text-success", )
                 ]
             ), color="success", outline=True
         ),
@@ -96,7 +101,7 @@ card_dashboard_stat = dbc.CardDeck(
             dbc.CardBody(
                 [
                     html.H5("Lowest order value", className="card-title"),
-                    html.Br(),html.Br(),
+                    html.Br(), html.Br(),
                     html.H4(id='lowest_order_value', className="text-danger")
                 ]
             ), color="danger", outline=True
@@ -112,7 +117,6 @@ card_dashboard_stat = dbc.CardDeck(
         )
     ]
 )
-
 
 card_content_1 = [
     dbc.CardHeader("Filter by timeline"),
@@ -186,7 +190,7 @@ layout = html.Div([
         dbc.Col([
             html.Div(children=[
                 card_dashboard_stat
-            ],id='stat')
+            ], id='stat')
         ], width=10)
     ]),
 
@@ -310,9 +314,9 @@ def submit_dashboard_request(n_clicks, year, month, country, state, city):
             print(f'data: {data}')
             fetch_dashboard_data(data)
             return None, dashboard_data_stat.get('total_orders', 0), \
-                   "$ "+ str(dashboard_data_stat.get('total_sales', 0.0)), \
-                   "$ "+ str(dashboard_data_stat.get('highest_order_value', 0.0)), \
-                   "$ "+ str(dashboard_data_stat.get('lowest_order_value', 0.0)), \
-                   "$ "+ str(dashboard_data_stat.get('average_order_value', 0.0))
+                   "$ " + str(dashboard_data_stat.get('total_sales', 0.0)), \
+                   "$ " + str(dashboard_data_stat.get('highest_order_value', 0.0)), \
+                   "$ " + str(dashboard_data_stat.get('lowest_order_value', 0.0)), \
+                   "$ " + str(dashboard_data_stat.get('average_order_value', 0.0))
     else:
         return None, None, None, None, None, None
