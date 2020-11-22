@@ -7,7 +7,7 @@ from apps.user.customer import Customer
 from dash.dependencies import Input, Output, State
 from app import app
 
-layout = dbc.Container([
+layout = html.Div([
 
         html.H2('Map Dashboard data'),
         html.Hr(),

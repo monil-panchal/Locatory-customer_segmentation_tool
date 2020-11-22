@@ -1,5 +1,6 @@
 import cards as cards
 import dash
+import pandas as pd
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
@@ -11,6 +12,31 @@ from app import app
 
 time_line = {}
 geo_data = {}
+dashboard_data_stat ={}
+
+def process_dashboard_data(sales_dashboard_df: pd.DataFrame):
+    if not sales_dashboard_df.empty:
+        print(f'sales_dashboard_df: {sales_dashboard_df.iloc[0]}')
+        global dashboard_data_stat
+
+        total_orders = sales_dashboard_df.shape[0]
+        dashboard_data_stat['total_orders'] = total_orders
+
+        total_sales = round(sales_dashboard_df['payment_value'].sum(), 2)
+        dashboard_data_stat['total_sales'] = total_sales
+
+        highest_order_value = round(sales_dashboard_df['payment_value'].max(), 2)
+        dashboard_data_stat['highest_order_value'] = highest_order_value
+
+        lowest_order_value = round(sales_dashboard_df['payment_value'].min(), 2)
+        dashboard_data_stat['lowest_order_value'] = lowest_order_value
+
+        average_order_value = round(sales_dashboard_df['payment_value'].mean(), 2)
+        dashboard_data_stat['average_order_value'] = average_order_value
+
+        print(f'updated dashboard_data_stat is: {dashboard_data_stat}')
+
+    pass
 
 
 def fetch_timelines():
@@ -23,6 +49,69 @@ def fetch_geo_info():
     global geo_data
     geo_data = Sales().fetch_geo_info()
     return geo_data
+
+
+def fetch_dashboard_data(data: dict):
+    sales_dashboard_data = Sales().get_orders_for_dashboard(data)
+    sales_dashboard_df = pd.DataFrame(sales_dashboard_data)
+
+    process_dashboard_data(sales_dashboard_df)
+
+    return sales_dashboard_df
+
+
+"""
+Card deck for dashboard statistics
+"""
+card_dashboard_stat = dbc.CardDeck(
+    [
+        dbc.Card(
+            dbc.CardBody(
+                [
+                    html.H5("Total Orders", className="card-title"),
+                    html.Br(),
+                    html.H1(id='total_orders')
+                ]
+            ), color="dark", outline=True
+        ),
+        dbc.Card(
+            dbc.CardBody(
+                [
+                    html.H5("Total sales", className="card-title"),
+                    html.Br(),html.Br(),
+                    html.H4(id='total_sales', className="text-info")
+                ]
+            ), color="info", outline=True
+        ),
+        dbc.Card(
+            dbc.CardBody(
+                [
+                    html.H5("Highest order value", className="card-title"),
+                    html.Br(),
+                    html.H4(id='highest_order_value', className="text-success",)
+                ]
+            ), color="success", outline=True
+        ),
+        dbc.Card(
+            dbc.CardBody(
+                [
+                    html.H5("Lowest order value", className="card-title"),
+                    html.Br(),html.Br(),
+                    html.H4(id='lowest_order_value', className="text-danger")
+                ]
+            ), color="danger", outline=True
+        ),
+        dbc.Card(
+            dbc.CardBody(
+                [
+                    html.H5("Average order value", className="card-title"),
+                    html.Br(),
+                    html.H4(id='average_order_value', className="text-warning")
+                ]
+            ), color="warning", outline=True
+        )
+    ]
+)
 
 
 card_content_1 = [
@@ -83,17 +172,28 @@ card_sales_dashboard = [
 
 ]
 
-layout = dbc.Container([
+layout = html.Div([
     html.H2('Sales Dashboards'),
     html.Hr(),
-    html.Div([
-        dbc.Card(card_content_1, ),
-        dbc.Card(card_content_2, ),
+    dbc.Row([
+        dbc.Col([
+            html.Div([
+                dbc.Card(card_content_1, ),
+                dbc.Card(card_content_2, ),
 
-    ], id='menu', style={'width': 200}),
-    html.Div(id='output'),
-    html.Div(card_sales_dashboard)
-], className="mt-4")
+            ], id='menu'),
+        ], width=2),
+        dbc.Col([
+            html.Div(children=[
+                card_dashboard_stat
+            ],id='stat')
+        ], width=10)
+    ]),
+
+    html.Div(id='output', hidden=True),
+    html.Div(id='sales_dashboard', hidden=True)
+
+])
 
 
 @app.callback([Output('output', 'children'),
@@ -173,16 +273,14 @@ def display_geo_data_cities(country, state):
     else:
         return []
 
-# @app.callback(
-#     Output('sales_dashboard', 'children'),
-#     Input('view_dashboard', 'n_clicks'))
-# def submit_dashboard_request(n_clicks):
-#     print(f'selected n_click is: {n_clicks}')
-#     return ''
-
 
 @app.callback(
-    Output('sales_dashboard', 'children'),
+    [Output('sales_dashboard', 'children'),
+     Output('total_orders', 'children'),
+     Output('total_sales', 'children'),
+     Output('highest_order_value', 'children'),
+     Output('lowest_order_value', 'children'),
+     Output('average_order_value', 'children')],
     Input('view_dashboard', 'n_clicks'),
     [State('year-selector', 'value'),
      State('month-selector', 'value'),
@@ -197,4 +295,24 @@ def submit_dashboard_request(n_clicks, year, month, country, state, city):
         print(f'selected country is: {country}')
         print(f'selected state is: {state}')
         print(f'selected city is: {city}')
-    return ''
+
+        if not None in [year, country]:
+            print('calling fetch sales data call')
+
+            data = {
+                'year': year,
+                'month': month,
+                'country': country,
+                'state': state,
+                'city': city
+            }
+
+            print(f'data: {data}')
+            fetch_dashboard_data(data)
+            return None, dashboard_data_stat.get('total_orders', 0), \
+                   "$ "+ str(dashboard_data_stat.get('total_sales', 0.0)), \
+                   "$ "+ str(dashboard_data_stat.get('highest_order_value', 0.0)), \
+                   "$ "+ str(dashboard_data_stat.get('lowest_order_value', 0.0)), \
+                   "$ "+ str(dashboard_data_stat.get('average_order_value', 0.0))
+    else:
+        return None, None, None, None, None, None
