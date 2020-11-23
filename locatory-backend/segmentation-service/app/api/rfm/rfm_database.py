@@ -1,4 +1,11 @@
+import pandas as pd
+
+from pymongo import MongoClient
+from pymongo.errors import ConnectionFailure
+from pymongo import IndexModel, ASCENDING, DESCENDING
+
 from app.configs import cfg
+
 
 class RFMDatabase:
     __instance__ = None
@@ -10,10 +17,12 @@ class RFMDatabase:
         """
         if RFMDatabase.__instance__ is None:
             RFMDatabase.__instance__ = self
-            self._client = MongoClient(host=self.get_database_url(), port=self.get_database_port())
+            self._client = MongoClient(
+                host=self.get_database_url(), port=self.get_database_port())
             self._db = self._client[self.get_database_name()]
         else:
-            raise Exception("You cannot create another Singleton RFMDatabase class")
+            raise Exception(
+                "You cannot create another Singleton RFMDatabase class")
 
     @staticmethod
     def get_instance():
@@ -37,3 +46,6 @@ class RFMDatabase:
 
     def get_database_password(self):
         return cfg.MONGODB_PASSWORD
+
+    def get_rfm_dataframe(self, start_date, end_date):
+        return pd.DataFrame([])
