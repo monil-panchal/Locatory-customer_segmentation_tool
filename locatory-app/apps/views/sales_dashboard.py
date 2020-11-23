@@ -12,6 +12,7 @@ from apps.user.sales import Sales
 
 from app import app
 from apps.views.graphs.bar_line_combo_graph import generate_bar_line_graph
+from apps.dataframe.process_sales_dashboard_df import add_year_month_week
 
 time_line = {}
 geo_data = {}
@@ -38,6 +39,9 @@ def process_current_dashboard_data(filter_data_options: dict, sales_dashboard_df
 
         current_df = current_df.reset_index(drop=True)
         previous_df = previous_df.reset_index(drop=True)
+
+        current_df, previous_df = add_year_month_week(current_df, previous_df)
+
         print(f'current df: {current_df}')
         print(f'previous_df df: {previous_df}')
 
@@ -56,10 +60,7 @@ def process_current_dashboard_data(filter_data_options: dict, sales_dashboard_df
         average_order_value = round(current_df['payment_value'].mean(), 2)
         dashboard_data_stat['average_order_value'] = average_order_value
 
-        print(f'updated dashboard_data_stat is: {dashboard_data_stat}')
-
     else:
-        print('Zero records retrieved')
         for (x, y) in dashboard_data_stat.items():
             dashboard_data_stat[x] = 0
         pass
@@ -126,8 +127,6 @@ def fetch_current_dashboard_data(data: dict):
 
     global current_df
     current_df = pd.DataFrame(sales_dashboard_data)
-
-    print(f'current df: {current_df}')
     process_current_dashboard_data(data, current_df)
 
     return data
@@ -186,7 +185,6 @@ card_dashboard_stat = dbc.CardDeck(
     ]
 )
 
-
 """
 Card deck for visualization
 """
@@ -195,8 +193,7 @@ card_dashboard_graphs = dbc.CardDeck(
         dbc.Card(
             dbc.CardBody(
                 [
-                    html.H5("Orders wise comparison by year or quarter", className="card-title"),
-                    dcc.Graph(id='bar-line-graph', style={"height": "80vh"})
+                    dcc.Graph(id='bar-line-graph')
                 ]
             ), color="dark", outline=True
         ),
@@ -278,7 +275,7 @@ layout = html.Div([
                 dbc.Card(card_content_1, ),
                 dbc.Card(card_content_2, ),
 
-            ], id='menu', style={'position':'sticky', 'top': '0'}),
+            ], id='menu', style={'position': 'sticky', 'top': '0'}),
         ], width=2),
 
         dbc.Col([
@@ -287,7 +284,7 @@ layout = html.Div([
                     html.Div(children=[
                         card_dashboard_stat
                     ], id='stat')
-                ], style={'position':'sticky', 'top': '0'})
+                ], style={'position': 'sticky', 'top': '0'})
             ]),
             html.Br(),
             dbc.Row([
@@ -298,9 +295,6 @@ layout = html.Div([
                 ]),
             ])
         ])
-
-
-
 
     ]),
 

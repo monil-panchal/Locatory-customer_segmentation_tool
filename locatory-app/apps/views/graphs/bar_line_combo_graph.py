@@ -1,47 +1,69 @@
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
-import datetime as dt
+
 
 def generate_bar_line_graph(current_df: pd.DataFrame, prev_df: pd.DataFrame, type: str):
-
-    print(f'type of x axis is: {type}')
-
-    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    fig = go.Figure()
+    # show month wise data for selected year
 
     if type == 'year':
-        current_x = current_df['order_date'].dt.month
-        # current_x = months
-        prev_x = prev_df['order_date'].dt.month
-        # prev_x = months
+
+        current_month_orders = current_df.groupby(['month'], sort=False).size().reset_index(name='orders')
+
+        fig.add_trace(go.Bar(
+            x=current_month_orders['month'],
+            y=current_month_orders['orders'],
+            name='This year',
+            marker_color='rgb(55, 83, 109)'
+
+        ))
+
+        if not prev_df.empty:
+            previous_month_orders = prev_df.groupby(['month'], sort=False).size().reset_index(name='orders')
+
+            fig.add_trace(go.Bar(
+                x=previous_month_orders['month'],
+                y=previous_month_orders['orders'],
+                name='Previous year',
+                marker_color='rgb(26, 118, 255)'
+
+            ))
+
+        fig.update_layout(xaxis_title='Months')
 
     else:
-        current_x = current_df['order_date'].apply(lambda d: (d.day-1) // 7 + 1)
-        prev_x = prev_df['order_date'].apply(lambda d: (d.day-1) // 7 + 1)
 
-    print(f'prev_x: {prev_x}')
-    print(f'current_x: {current_x}')
+        current_week_orders = current_df.groupby(['week']).size().reset_index(name='orders')
+        current_week_orders = current_week_orders.sort_values(by=['week'])
 
-    # fig = px.line(current_df, x=current_x, y=list(range(0, current_df.shape[0])), color=px.Constant("This year"),
-    #               labels=dict(x="Fruit", y="Amount", color="Time Period"))
-    # fig.add_bar(x=prev_x, y=list(range(0, prev_df.shape[0])), name="Last year")
-    # fig.show()
+        fig.add_trace(go.Bar(
+            x=current_week_orders['week'],
+            y=current_week_orders['orders'],
+            name='This month',
+            marker_color='rgb(55, 83, 109)'
+        ))
 
-    fig = go.Figure()
-    fig.add_trace(go.Bar(
-        x=current_x,
-        y=list(range(0, current_df.shape[0])),
-        name='Current timeline',
-        marker_color='indianred'
-    ))
-    fig.add_trace(go.Bar(
-        x=prev_x,
-        y=list(range(0, prev_df.shape[0])),
-        name='Previous timeline',
-        marker_color='lightsalmon'
-    ))
+        if not prev_df.empty:
+            previous_week_orders = prev_df.groupby(['week']).size().reset_index(name='orders')
+            previous_week_orders = previous_week_orders.sort_values(by=['week'])
 
-    fig.update_layout(barmode='group', xaxis_tickangle=-45)
+            fig.add_trace(go.Bar(
+                x=previous_week_orders['week'],
+                y=previous_week_orders['orders'],
+                name='Previous month',
+                marker_color='rgb(26, 118, 255)'
+            ))
+
+        fig.update_layout(xaxis_title='Weeks',
+                          barmode='group',
+                          bargap=0.15,
+                          bargroupgap=0.1)
+
+    fig.update_layout(
+        title='Month/week wise comparison by number of orders',
+        yaxis_title='Number of orders',
+        barmode='group',
+        xaxis_tickangle=-45
+    )
 
     return fig
