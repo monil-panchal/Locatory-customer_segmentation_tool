@@ -1,4 +1,6 @@
 from apps.db.mongo_connection import PyMongo
+from datetime import datetime
+import calendar
 
 
 class Sales:
@@ -65,19 +67,49 @@ class Sales:
         print(f'data received in db call: {data}')
 
         if data:
-            year = data['year']
-            month = data['month']
-            country = data['country']
-            state = data['state']
-            city = data['city']
+            year = data.get('year', None)
+            prev_year = data.get('prev_year', None)
+            month = data.get('month', None)
+            prev_month = data.get('prev_month', None)
+            country = data.get('country', None)
+            state = data.get('state', None)
+            city = data.get('city', None)
 
             queries = []
-            year_query = {'$expr': {'$eq': [{'$year': '$order_date'}, year]}}
-            queries.append(year_query)
 
-            if month:
-                month_query = {'$expr': {'$eq': [{'$month': '$order_date'}, month]}}
-                queries.append(month_query)
+            if prev_year is not None:
+                if prev_month is not None and month is not None:
+                    start = datetime(prev_year, prev_month, 1)
+                    end = datetime(year, month, calendar.monthrange(year, month)[1])
+                    year_month_range_query = {'order_date': {'$gte': start, '$lte': end}}
+                else:
+                    start = datetime(prev_year, 1, 1)
+                    end = datetime(year, 12, calendar.monthrange(year, 12)[1])
+                    year_month_range_query = {'order_date': {'$gte': start, '$lte': end}}
+                queries.append(year_month_range_query)
+
+            elif year is not None:
+                if prev_month is not None and month is not None:
+                    start = datetime(year, prev_month, 1)
+                    end = datetime(year, month, calendar.monthrange(year, month)[1])
+                    year_month_range_query = {'order_date': {'$gte': start, '$lte': end}}
+                    queries.append(year_month_range_query)
+                elif month is not None:
+                    year_query = {'$expr': {'$eq': [{'$year': '$order_date'}, year]}}
+                    queries.append(year_query)
+
+                    month_query = {'$expr': {'$eq': [{'$month': '$order_date'}, month]}}
+                    queries.append(month_query)
+                else:
+                    year_query = {'$expr': {'$eq': [{'$year': '$order_date'}, year]}}
+                    queries.append(year_query)
+
+            # year_query = {'$expr': {'$eq': [{'$year': '$order_date'}, year]}}
+            # queries.append(year_query)
+            #
+            # if month:
+            #     month_query = {'$expr': {'$eq': [{'$month': '$order_date'}, month]}}
+            #     queries.append(month_query)
 
             country_query = {'customer.address.customer_country': country}
             queries.append(country_query)

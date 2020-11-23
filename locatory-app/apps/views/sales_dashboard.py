@@ -1,5 +1,7 @@
+import asyncio
 import cards as cards
 import dash
+import datetime as dt
 import pandas as pd
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
@@ -13,26 +15,44 @@ from app import app
 time_line = {}
 geo_data = {}
 dashboard_data_stat = {}
+current_df = pd.DataFrame
+previous_df = pd.DataFrame
 
 
-def process_dashboard_data(sales_dashboard_df: pd.DataFrame):
+def process_current_dashboard_data(filter_data_options: dict, sales_dashboard_df: pd.DataFrame):
+    global dashboard_data_stat
     if not sales_dashboard_df.empty:
-        print(f'sales_dashboard_df: {sales_dashboard_df.iloc[0]}')
-        global dashboard_data_stat
+        global current_df
+        global previous_df
 
-        total_orders = sales_dashboard_df.shape[0]
+        if filter_data_options.get('year', None) is not None:
+            if filter_data_options.get('month', None) is not None:
+                current_df = sales_dashboard_df[
+                    (sales_dashboard_df['order_date'].dt.year == filter_data_options.get('year')) &
+                    (sales_dashboard_df['order_date'].dt.month == filter_data_options.get('month'))]
+            else:
+                current_df = sales_dashboard_df[
+                    (sales_dashboard_df['order_date'].dt.year == filter_data_options.get('year'))]
+            previous_df = sales_dashboard_df[~sales_dashboard_df.isin(current_df)].dropna(how='all')
+
+        current_df = current_df.reset_index(drop=True)
+        previous_df = previous_df.reset_index(drop=True)
+        print(f'current df: {current_df}')
+        print(f'previous_df df: {previous_df}')
+
+        total_orders = current_df.shape[0]
         dashboard_data_stat['total_orders'] = total_orders
 
-        total_sales = round(sales_dashboard_df['payment_value'].sum(), 2)
+        total_sales = round(current_df['payment_value'].sum(), 2)
         dashboard_data_stat['total_sales'] = total_sales
 
-        highest_order_value = round(sales_dashboard_df['payment_value'].max(), 2)
+        highest_order_value = round(current_df['payment_value'].max(), 2)
         dashboard_data_stat['highest_order_value'] = highest_order_value
 
-        lowest_order_value = round(sales_dashboard_df['payment_value'].min(), 2)
+        lowest_order_value = round(current_df['payment_value'].min(), 2)
         dashboard_data_stat['lowest_order_value'] = lowest_order_value
 
-        average_order_value = round(sales_dashboard_df['payment_value'].mean(), 2)
+        average_order_value = round(current_df['payment_value'].mean(), 2)
         dashboard_data_stat['average_order_value'] = average_order_value
 
         print(f'updated dashboard_data_stat is: {dashboard_data_stat}')
@@ -47,6 +67,12 @@ def process_dashboard_data(sales_dashboard_df: pd.DataFrame):
 def fetch_timelines():
     global time_line
     time_line = Sales().fetch_timeline()
+    time_line = dict(sorted(time_line.items(), reverse=True))
+
+    for k, v in time_line.items():
+        time_line[k] = sorted(time_line[k])
+
+    print(f'time retrieved from db: {time_line} ')
     return time_line
 
 
@@ -56,13 +82,91 @@ def fetch_geo_info():
     return geo_data
 
 
-def fetch_dashboard_data(data: dict):
+# def fetch_previous_dashboard_data(data: dict):
+#     print(f'data in fetch_previous_dashboard_data: {data}')
+#     """
+#     Previous year data fetching logic
+#     """
+#     current_year = data['year']
+#     prev_year = current_year - 1
+#
+#
+#     if data['month'] and data['month'] is not None:
+#         prev_month = data['month'] - 1
+#
+#         if prev_month in time_line[current_year]:
+#             print(f'prev month: {prev_month} is in current year: {current_year} range')
+#             data['year'] = current_year
+#             data['month'] = prev_month
+#
+#         else:
+#             print(
+#                 f'prev month: {prev_month} is NOT in current year: {current_year} range. Fetching previous latest month')
+#             prev_month = time_line[prev_year] and time_line[prev_year][-1] or 0
+#             data['year'] = prev_year
+#             data['month'] = prev_month
+#
+#             print(f'latest previous month is: {prev_month} of the year: {prev_year}')
+#
+#     else:
+#         print(f'No month is selected in the filter. Fetching data of the previous year: {prev_year}')
+#         data['year'] = prev_year
+#
+#     previous_sales_data = Sales().get_orders_for_dashboard(data)
+#     global previous_df
+#     previous_df = pd.DataFrame(previous_sales_data)
+#
+#     print(f'previous_df: {previous_df}')
+#     return previous_df
+
+def calculate_previous_timeline_data(data: dict):
+    print(f'data in fetch_previous_dashboard_data: {data}')
+    """
+    Previous year data fetching logic
+    """
+    current_year = data['year']
+    prev_year = current_year - 1
+
+    if prev_year not in time_line.keys():
+        prev_year = current_year
+
+    if data['month'] and data['month'] is not None:
+        prev_month = data['month'] - 1
+
+        if prev_month in time_line[current_year]:
+            print(f'prev month: {prev_month} is in current year: {current_year} range')
+            data['prev_month'] = prev_month
+
+        else:
+            print(
+                f'prev month: {prev_month} is NOT in current year: {current_year} range. Fetching previous latest month')
+            prev_month = time_line[prev_year] and time_line[prev_year][-1] or 1
+
+            data['prev_year'] = prev_year
+            data['prev_month'] = prev_month
+
+            print(f'latest previous month is: {prev_month} of the year: {prev_year}')
+
+    else:
+        print(f'No month is selected in the filter. Fetching data of the previous year: {prev_year}')
+        data['prev_year'] = prev_year
+
+    return data
+
+
+def fetch_current_dashboard_data(data: dict):
+    data = calculate_previous_timeline_data(data)
+    print(f'updated data dict: {data}')
+
     sales_dashboard_data = Sales().get_orders_for_dashboard(data)
-    sales_dashboard_df = pd.DataFrame(sales_dashboard_data)
 
-    process_dashboard_data(sales_dashboard_df)
+    global current_df
+    current_df = pd.DataFrame(sales_dashboard_data)
 
-    return sales_dashboard_df
+    print(f'current df: {current_df}')
+    process_current_dashboard_data(data, current_df)
+
+    return current_df
 
 
 """
@@ -217,7 +321,7 @@ def display_page(href):
             countries.append(i['_id'])
 
         return '', \
-               [{'label': i, 'value': i} for i in sorted(time_line.keys(), reverse=True)], \
+               [{'label': i, 'value': i} for i in time_line.keys()], \
                [{'label': i, 'value': i} for i in countries]
 
     else:
@@ -312,7 +416,7 @@ def submit_dashboard_request(n_clicks, year, month, country, state, city):
             }
 
             print(f'data: {data}')
-            fetch_dashboard_data(data)
+            fetch_current_dashboard_data(data)
             return None, dashboard_data_stat.get('total_orders', 0), \
                    "$ " + str(dashboard_data_stat.get('total_sales', 0.0)), \
                    "$ " + str(dashboard_data_stat.get('highest_order_value', 0.0)), \
