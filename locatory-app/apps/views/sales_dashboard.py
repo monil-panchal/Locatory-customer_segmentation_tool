@@ -11,6 +11,7 @@ from dash.exceptions import PreventUpdate
 from apps.user.sales import Sales
 
 from app import app
+from apps.views.graphs.bar_line_combo_graph import generate_bar_line_graph
 
 time_line = {}
 geo_data = {}
@@ -82,43 +83,6 @@ def fetch_geo_info():
     return geo_data
 
 
-# def fetch_previous_dashboard_data(data: dict):
-#     print(f'data in fetch_previous_dashboard_data: {data}')
-#     """
-#     Previous year data fetching logic
-#     """
-#     current_year = data['year']
-#     prev_year = current_year - 1
-#
-#
-#     if data['month'] and data['month'] is not None:
-#         prev_month = data['month'] - 1
-#
-#         if prev_month in time_line[current_year]:
-#             print(f'prev month: {prev_month} is in current year: {current_year} range')
-#             data['year'] = current_year
-#             data['month'] = prev_month
-#
-#         else:
-#             print(
-#                 f'prev month: {prev_month} is NOT in current year: {current_year} range. Fetching previous latest month')
-#             prev_month = time_line[prev_year] and time_line[prev_year][-1] or 0
-#             data['year'] = prev_year
-#             data['month'] = prev_month
-#
-#             print(f'latest previous month is: {prev_month} of the year: {prev_year}')
-#
-#     else:
-#         print(f'No month is selected in the filter. Fetching data of the previous year: {prev_year}')
-#         data['year'] = prev_year
-#
-#     previous_sales_data = Sales().get_orders_for_dashboard(data)
-#     global previous_df
-#     previous_df = pd.DataFrame(previous_sales_data)
-#
-#     print(f'previous_df: {previous_df}')
-#     return previous_df
-
 def calculate_previous_timeline_data(data: dict):
     print(f'data in fetch_previous_dashboard_data: {data}')
     """
@@ -166,7 +130,7 @@ def fetch_current_dashboard_data(data: dict):
     print(f'current df: {current_df}')
     process_current_dashboard_data(data, current_df)
 
-    return current_df
+    return data
 
 
 """
@@ -218,6 +182,31 @@ card_dashboard_stat = dbc.CardDeck(
                     html.H4(id='average_order_value', className="text-warning")
                 ]
             ), color="warning", outline=True
+        )
+    ]
+)
+
+
+"""
+Card deck for visualization
+"""
+card_dashboard_graphs = dbc.CardDeck(
+    [
+        dbc.Card(
+            dbc.CardBody(
+                [
+                    html.H5("Orders wise comparison by year or quarter", className="card-title"),
+                    dcc.Graph(id='bar-line-graph', style={"height": "80vh"})
+                ]
+            ), color="dark", outline=True
+        ),
+        dbc.Card(
+            dbc.CardBody(
+                [
+                    html.H5("Sales wise comparison by year or quarter", className="card-title"),
+                    html.Br(),
+                ]
+            ), color="dark", outline=True
         )
     ]
 )
@@ -289,13 +278,30 @@ layout = html.Div([
                 dbc.Card(card_content_1, ),
                 dbc.Card(card_content_2, ),
 
-            ], id='menu'),
+            ], id='menu', style={'position':'sticky', 'top': '0'}),
         ], width=2),
+
         dbc.Col([
-            html.Div(children=[
-                card_dashboard_stat
-            ], id='stat')
-        ], width=10)
+            dbc.Row([
+                dbc.Col([
+                    html.Div(children=[
+                        card_dashboard_stat
+                    ], id='stat')
+                ], style={'position':'sticky', 'top': '0'})
+            ]),
+            html.Br(),
+            dbc.Row([
+                dbc.Col([
+                    html.Div(children=[
+                        card_dashboard_graphs
+                    ], id='graphs')
+                ]),
+            ])
+        ])
+
+
+
+
     ]),
 
     html.Div(id='output', hidden=True),
@@ -388,7 +394,8 @@ def display_geo_data_cities(country, state):
      Output('total_sales', 'children'),
      Output('highest_order_value', 'children'),
      Output('lowest_order_value', 'children'),
-     Output('average_order_value', 'children')],
+     Output('average_order_value', 'children'),
+     Output('bar-line-graph', 'figure')],
     Input('view_dashboard', 'n_clicks'),
     [State('year-selector', 'value'),
      State('month-selector', 'value'),
@@ -415,12 +422,20 @@ def submit_dashboard_request(n_clicks, year, month, country, state, city):
                 'city': city
             }
 
-            print(f'data: {data}')
-            fetch_current_dashboard_data(data)
+            data = fetch_current_dashboard_data(data)
+
+            if data.get('prev_month'):
+                type = 'month'
+            else:
+                type = 'year'
+
+            graph_1 = generate_bar_line_graph(current_df, previous_df, type)
+
             return None, dashboard_data_stat.get('total_orders', 0), \
                    "$ " + str(dashboard_data_stat.get('total_sales', 0.0)), \
                    "$ " + str(dashboard_data_stat.get('highest_order_value', 0.0)), \
                    "$ " + str(dashboard_data_stat.get('lowest_order_value', 0.0)), \
-                   "$ " + str(dashboard_data_stat.get('average_order_value', 0.0))
+                   "$ " + str(dashboard_data_stat.get('average_order_value', 0.0)), \
+                   graph_1
     else:
-        return None, None, None, None, None, None
+        return None, None, None, None, None, None, {}
