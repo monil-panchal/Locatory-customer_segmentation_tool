@@ -11,7 +11,7 @@ from dash.exceptions import PreventUpdate
 from apps.user.sales import Sales
 
 from app import app
-from apps.views.graphs.bar_line_combo_graph import generate_bar_line_graph
+from apps.views.graphs.bar_line_combo_graph import generate_bar_graph_by_orders, generate_bar_graph_by_sales
 from apps.dataframe.process_sales_dashboard_df import add_year_month_week
 
 time_line = {}
@@ -141,7 +141,6 @@ card_dashboard_stat = dbc.CardDeck(
             dbc.CardBody(
                 [
                     html.H5("Total Orders", className="card-title"),
-                    html.Br(),
                     html.H1(id='total_orders')
                 ]
             ), color="dark", outline=True
@@ -150,7 +149,7 @@ card_dashboard_stat = dbc.CardDeck(
             dbc.CardBody(
                 [
                     html.H5("Total sales", className="card-title"),
-                    html.Br(), html.Br(),
+                    html.Br(),
                     html.H4(id='total_sales', className="text-info")
                 ]
             ), color="info", outline=True
@@ -159,7 +158,6 @@ card_dashboard_stat = dbc.CardDeck(
             dbc.CardBody(
                 [
                     html.H5("Highest order value", className="card-title"),
-                    html.Br(),
                     html.H4(id='highest_order_value', className="text-success", )
                 ]
             ), color="success", outline=True
@@ -168,7 +166,7 @@ card_dashboard_stat = dbc.CardDeck(
             dbc.CardBody(
                 [
                     html.H5("Lowest order value", className="card-title"),
-                    html.Br(), html.Br(),
+                    html.Br(),
                     html.H4(id='lowest_order_value', className="text-danger")
                 ]
             ), color="danger", outline=True
@@ -177,7 +175,6 @@ card_dashboard_stat = dbc.CardDeck(
             dbc.CardBody(
                 [
                     html.H5("Average order value", className="card-title"),
-                    html.Br(),
                     html.H4(id='average_order_value', className="text-warning")
                 ]
             ), color="warning", outline=True
@@ -193,15 +190,14 @@ card_dashboard_graphs = dbc.CardDeck(
         dbc.Card(
             dbc.CardBody(
                 [
-                    dcc.Graph(id='bar-line-graph')
+                    dcc.Graph(id='bar_graph_orders')
                 ]
             ), color="dark", outline=True
         ),
         dbc.Card(
             dbc.CardBody(
                 [
-                    html.H5("Sales wise comparison by year or quarter", className="card-title"),
-                    html.Br(),
+                    dcc.Graph(id='bar_graph_sales')
                 ]
             ), color="dark", outline=True
         )
@@ -389,7 +385,8 @@ def display_geo_data_cities(country, state):
      Output('highest_order_value', 'children'),
      Output('lowest_order_value', 'children'),
      Output('average_order_value', 'children'),
-     Output('bar-line-graph', 'figure')],
+     Output('bar_graph_orders', 'figure'),
+     Output('bar_graph_sales', 'figure')],
     Input('view_dashboard', 'n_clicks'),
     [State('year-selector', 'value'),
      State('month-selector', 'value'),
@@ -423,13 +420,15 @@ def submit_dashboard_request(n_clicks, year, month, country, state, city):
             else:
                 type = 'year'
 
-            graph_1 = generate_bar_line_graph(current_df, previous_df, type)
+            bar_graph_by_orders = generate_bar_graph_by_orders(current_df, previous_df, type)
+            bar_graph_by_sales = generate_bar_graph_by_sales(current_df, previous_df, type)
 
             return None, dashboard_data_stat.get('total_orders', 0), \
                    "$ " + str(dashboard_data_stat.get('total_sales', 0.0)), \
                    "$ " + str(dashboard_data_stat.get('highest_order_value', 0.0)), \
                    "$ " + str(dashboard_data_stat.get('lowest_order_value', 0.0)), \
                    "$ " + str(dashboard_data_stat.get('average_order_value', 0.0)), \
-                   graph_1
+                   bar_graph_by_orders, \
+                   bar_graph_by_sales
     else:
-        return None, None, None, None, None, None, {}
+        return None, None, None, None, None, None, {}, {}
