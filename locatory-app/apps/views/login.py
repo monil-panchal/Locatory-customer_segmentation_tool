@@ -71,7 +71,7 @@ def success(n_clicks, usernameSubmit, passwordSubmit, username, password):
                 print('user authenticated successfully')
                 loggedin_user = User(user)
                 login_user(loggedin_user)
-                return '/map_dashboard', None
+                return '/sales_dashboard', None
             else:
                 print('user not authenticated successfully')
                 return '/', 'Please check your credentials'
