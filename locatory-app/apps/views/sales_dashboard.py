@@ -12,7 +12,7 @@ from apps.user.sales import Sales
 
 from app import app
 from apps.views.graphs.sales_bar_graph import generate_bar_graph_by_orders, generate_bar_graph_by_sales
-from apps.views.graphs.sales_pie_chart import generate_pie_chart_by_location
+from apps.views.graphs.sales_pie_chart import generate_pie_chart_by_location, generate_pie_chart_by_product_category
 from apps.dataframe.process_sales_dashboard_df import add_year_month_week
 
 time_line = {}
@@ -42,6 +42,8 @@ def process_current_dashboard_data(filter_data_options: dict, sales_dashboard_df
         previous_df = previous_df.reset_index(drop=True)
 
         current_df, previous_df = add_year_month_week(current_df, previous_df)
+
+        print(f'current_df first row: {current_df.iloc[0]}')
 
         total_orders = current_df.shape[0]
         dashboard_data_stat['total_orders'] = total_orders
@@ -218,7 +220,7 @@ card_dashboard_pie_graphs = dbc.CardDeck(
         dbc.Card(
             dbc.CardBody(
                 [
-                    dcc.Graph(id='pie_chart_category')
+                    dcc.Graph(id='pie_chart_item_category')
                 ]
             ), color="dark", outline=True
         )
@@ -300,7 +302,7 @@ layout = html.Div([
                 dbc.Col([
                     html.Div([
                         dbc.Card(card_dashboard_stat)
-                    ], id='stat', style={'position': 'sticky', 'top': '0'})
+                    ], id='stat')
                 ])
             ]),
             html.Br(),
@@ -416,7 +418,8 @@ def display_geo_data_cities(country, state):
      Output('average_order_value', 'children'),
      Output('bar_graph_orders', 'figure'),
      Output('bar_graph_sales', 'figure'),
-     Output('pie_chart_location', 'figure')],
+     Output('pie_chart_location', 'figure'),
+     Output('pie_chart_item_category', 'figure')],
     Input('view_dashboard', 'n_clicks'),
     [State('year-selector', 'value'),
      State('month-selector', 'value'),
@@ -457,13 +460,16 @@ def submit_dashboard_request(n_clicks, year, month, country, state, city):
                     pie_chart_type = 'country'
                 elif not data.get('state') is None:
                     pie_chart_type = 'state'
-
                 if not data.get('city') is None:
                     pie_chart_type = 'city'
 
                 pie_chart_by_location = generate_pie_chart_by_location(current_df, pie_chart_type)
+                pie_chart_by_item_category = generate_pie_chart_by_product_category(current_df)
             else:
-                bar_graph_by_sales, bar_graph_by_orders, pie_chart_by_location = {}, {}, {}
+                bar_graph_by_sales, \
+                bar_graph_by_orders, \
+                pie_chart_by_location, \
+                pie_chart_by_item_category = {}, {}, {}, {}
 
             return None, dashboard_data_stat.get('total_orders', 0), \
                    "$ " + str(dashboard_data_stat.get('total_sales', 0.0)), \
@@ -471,6 +477,6 @@ def submit_dashboard_request(n_clicks, year, month, country, state, city):
                    "$ " + str(dashboard_data_stat.get('lowest_order_value', 0.0)), \
                    "$ " + str(dashboard_data_stat.get('average_order_value', 0.0)), \
                    bar_graph_by_orders, \
-                   bar_graph_by_sales, pie_chart_by_location
+                   bar_graph_by_sales, pie_chart_by_location, pie_chart_by_item_category
     else:
-        return None, None, None, None, None, None, {}, {}, {}
+        return None, None, None, None, None, None, {}, {}, {}, {}
