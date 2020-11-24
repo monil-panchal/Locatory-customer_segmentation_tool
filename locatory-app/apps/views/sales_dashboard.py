@@ -44,8 +44,6 @@ def process_current_dashboard_data(filter_data_options: dict, sales_dashboard_df
 
         current_df, previous_df = add_year_month_week(current_df, previous_df)
 
-        print(f'current_df first row: {current_df.iloc[0]}')
-
         total_orders = current_df.shape[0]
         dashboard_data_stat['total_orders'] = total_orders
 
@@ -236,6 +234,7 @@ card_dashboard_map = dbc.CardDeck(
         dbc.Card(
             dbc.CardBody(
                 [
+                    html.H5('Sales by region'),
                     dcc.Graph(id='map_sales')
                 ]
             ), color="dark", outline=True
@@ -383,7 +382,6 @@ def display_page(href):
 @app.callback(Output('month-selector', 'options'),
               Input('year-selector', 'value'))
 def display_timeline_data(year):
-    print(f'selected year is:{year}')
     if year is not None:
         months = time_line[year]
         return [{'label': i, 'value': i} for i in sorted(months)]

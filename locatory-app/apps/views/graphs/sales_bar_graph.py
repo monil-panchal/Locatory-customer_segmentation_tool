@@ -15,8 +15,7 @@ def generate_bar_graph_by_orders(current_df: pd.DataFrame, prev_df: pd.DataFrame
                 x=current_month_orders['month'],
                 y=current_month_orders['orders'],
                 name='This year',
-                marker_color='rgb(55, 83, 109)'
-
+                marker_color='rgb(55, 83, 109)',
             ))
 
         if not prev_df.empty:
