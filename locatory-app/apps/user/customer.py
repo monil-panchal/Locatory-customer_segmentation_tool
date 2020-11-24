@@ -28,7 +28,8 @@ class Customer:
         db = pymongoObj.get_db_connection()
         customer_list = []
         cursor = db.Customer.find({},
-                                  {'name': 1, 'email': 1, 'age': 1, 'gender': 1, 'income': 1, 'address': 1, '_id': 0},
+                                  {'customer_id': 1, 'name': 1, 'email': 1, 'age': 1, 'gender': 1, 'income': 1,
+                                   'address': 1, '_id': 0},
                                   batch_size=500)
         for item in cursor:
             customer = {}
