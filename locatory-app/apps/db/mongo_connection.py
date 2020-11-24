@@ -19,4 +19,3 @@ class PyMongo:
                 self.client.close()
             except Exception as e:
                 print(e)
-
