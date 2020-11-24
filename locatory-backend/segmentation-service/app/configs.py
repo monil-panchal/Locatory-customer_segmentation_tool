@@ -21,6 +21,7 @@ class GlobalConfig(BaseSettings):
     LOG_PATH: str = None
     MONGODB_URL: str = None
     MONGODB_PORT: int = None
+    MONGODB_DATABASE_NAME: str = None
     MONGODB_USERNAME: str = None
     MONGODB_PASSWORD: str = None
 

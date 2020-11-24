@@ -22,7 +22,7 @@ class Geography(BaseModel):
     city: Optional[List[str]] = []
 
 
-class RFMParameters(BaseModel):
+class RFMParametersValidation(BaseModel):
     n_segments: int
     data_period: int
     segment_separators: Optional[List[float]] = []

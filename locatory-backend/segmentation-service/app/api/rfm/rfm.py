@@ -1,15 +1,17 @@
-import stats
 import datetime
 from dateutil.relativedelta import relativedelta
 import numpy as np
 import pandas as pd
 from pyclustering.cluster.kmedians import kmedians
 
-from rfm_parameters import RFMParameters
-from rfm_database import RFMDatabase
+import app.api.rfm.stats
+from .rfm_database import RFMDatabase
 
 
-class RFM(RFMParameters):
+class RFM():
+
+    def __init__(self, parameters_dict):
+        self.rfm_parameters = parameters_dict
 
     # Methods for RFM Table
     def get_recency_class(self, r_value):
@@ -31,14 +33,15 @@ class RFM(RFMParameters):
         return r_class
 
     def get_base_rfm_df(self, start_date, end_date):
-        rfm_df = RFMDatabase.get_instance().get_rfm_dataframe(start_date, end_date)
+        rfm_df = RFMDatabase.get_instance().get_rfm_dataframe(
+            start_date, end_date, self.rfm_parameters)
 
-        datetime_end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        # datetime_end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
 
-        rfm_df['R_Value'] = (
-            datetime_end_date - pd.to_datetime(rfm_df['Max_Date'], errors='coerce')).dt.days
+        # rfm_df['R_Value'] = (
+        #     datetime_end_date - pd.to_datetime(rfm_df['Max_Date'], errors='coerce')).dt.days
 
-        rfm_df.drop(['Max_Date'], axis=1, inplace=True)
+        # rfm_df.drop(['Max_Date'], axis=1, inplace=True)
 
         return rfm_df
 
@@ -208,17 +211,18 @@ class RFM(RFMParameters):
 
     def perform_rfm_segmentation(self, rfm_logger):
         # Default Dates Last 1 year
-        cur_date = datetime.datetime.now().date()
+        cur_date = datetime.datetime.now()
         date_before_period = cur_date + \
-            relativedelta(months=-self.data_period)
+            relativedelta(months=-self.rfm_parameters.get("data_period"))
 
         rfm_df = self.get_base_rfm_df(date_before_period, cur_date)
+        print(rfm_df.head())
+        # rfmd_df = self.merge_with_duration(
+        #     rfm_df, date_before_period, cur_date)
 
-        rfmd_df = self.merge_with_duration(
-            rfm_df, date_before_period, cur_date)
+        # rfmd_df = self.get_average_rfm_df(rfmd_df)
 
-        rfmd_df = self.get_average_rfm_df(rfmd_df)
+        # rfmd_df = self.cluster_average_rfm_values(rfmd_df)
 
-        rfmd_df = self.cluster_average_rfm_values(rfmd_df)
-
-        return rfmd_df
+        # return rfmd_df
+        return True
