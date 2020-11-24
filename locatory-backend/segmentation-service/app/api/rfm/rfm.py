@@ -2,7 +2,6 @@ import datetime
 from dateutil.relativedelta import relativedelta
 import numpy as np
 import pandas as pd
-from pyclustering.cluster.kmedians import kmedians
 
 import app.api.rfm.stats
 from .rfm_database import RFMDatabase
@@ -36,95 +35,24 @@ class RFM():
         rfm_df = RFMDatabase.get_instance().get_rfm_dataframe(
             start_date, end_date, self.rfm_parameters)
 
-        # datetime_end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        rfm_df['R'] = (
+            end_date - pd.to_datetime(rfm_df['Latest_Order_Date'], errors='coerce')).dt.days
 
-        # rfm_df['R_Value'] = (
-        #     datetime_end_date - pd.to_datetime(rfm_df['Max_Date'], errors='coerce')).dt.days
-
-        # rfm_df.drop(['Max_Date'], axis=1, inplace=True)
+        rfm_df.drop(['Latest_Order_Date'], axis=1, inplace=True)
 
         return rfm_df
 
-    def merge_with_duration(self, rfm_df, start_date, end_date):
+    def merge_with_duration(self, rfm_df, end_date):
         # Calc Duration
-        datetime_start_date = datetime.datetime.strptime(
-            start_date, '%Y-%m-%d')
-        datetime_end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
-
         # TODO: Check if Min_Date needs relpacing with start_date for old customers, check Mongo RFM query as well
         rfm_df['Duration_Days'] = (
-            datetime_end_date - pd.to_datetime(rfm_df['Min_Date'], errors='coerce')).dt.days
+            end_date - pd.to_datetime(rfm_df['First_Order_Date'], errors='coerce')).dt.days
 
         rfm_df['Duration_Days'] = rfm_df['Duration_Days'].replace(0, 1)
 
-        rfm_df.drop(['Min_Date'], axis=1, inplace=True)
+        rfm_df.drop(['First_Order_Date'], axis=1, inplace=True)
 
         return rfm_df
-
-    def get_class_kmedians(self, number, medians, key_val):
-        # Predict the cluster
-        cluster_median = min(medians, key=lambda x: abs(x-number))
-        median_score = key_val[str(cluster_median)]
-        return median_score
-
-    def get_kmedian_clusters(self, kmedian_medians):
-        medians = [x[0] if type(x) == list else x for x in kmedian_medians]
-
-        asc_medians = sorted(medians)
-
-        i = 1
-        key_val = {}
-        for med in asc_medians:
-            key_val[str(med)] = i
-            i += 1
-
-        return medians, key_val
-
-    def check_and_get_clusters(self, cluster_for, cluster_type):
-        medians = []
-
-        df = pd.read_csv('required_files/kmedian_cluster_centers.csv')
-
-        if not df.empty:
-            req_df = df.loc[(df['client_name'] == client_name) & (
-                df['cluster_for'] == cluster_for) & (df['cluster_type'] == cluster_type)].reset_index()
-
-            if not req_df.empty:
-                for col in req_df.columns.values:
-                    if col not in ['index', 'client_name', 'cluster_for', 'cluster_type']:
-                        medians.append(req_df.get_value(0, col))
-
-                return True, medians, df
-
-        return False, [], df
-
-    def calculate_and_save_kmedians(self, rfmd_df, col, cluster_type):
-        medians = []
-
-        unique_list = list(set(rfmd_df[col].tolist()))
-
-        a = np.array(sorted(unique_list))
-        initial_centers = [np.array([np.percentile(a, 2)]), np.array([np.percentile(a, 32)]),
-                           np.array([np.percentile(a, 55)]), np.array(
-                               [np.percentile(a, 75)]),
-                           np.array([np.percentile(a, 98)])]
-
-        data_list = [[data] for data in unique_list]
-        kmedians_instance = kmedians(
-            data_list, initial_centers, 0.0001, ccore=False)
-
-        # run cluster analysis and obtain results
-        kmedians_instance.process()
-
-        medians = kmedians_instance.get_medians()
-
-        kmedian_medians = [x[0] for x in medians]
-        asc_medians = sorted(kmedian_medians)
-
-        # Append and Save the new df
-        # TODO: save the model
-
-        return medians
 
     def assign_rfm_class(self, score, df, i, col):
         if score <= 0.2:
@@ -159,9 +87,9 @@ class RFM():
         final_medians_f, key_val_f = self.get_kmedian_clusters(medians_f)
 
         for i in range(len(x_df)):
-            m_value = x_df.get_value(i, 'Avg_M_Value')
-            r_value = x_df.get_value(i, 'R_Value')
-            f_value = x_df.get_value(i, 'Avg_F_Value')
+            m_value = x_df.get_value(i, 'Avg_M')
+            r_value = x_df.get_value(i, 'R')
+            f_value = x_df.get_value(i, 'Avg_F')
             pv_value = x_df.get_value(i, 'PV_Ratio')
             dur_value = x_df.get_value(i, 'Duration_Days')
 
@@ -187,25 +115,43 @@ class RFM():
         return x_df
 
     def get_average_rfm_df(self, rfmd_df):
-        rfmd_df['Avg_M_Value'] = rfmd_df['M_Value']/rfmd_df['Duration_Days']
-        rfmd_df['Avg_F_Value'] = rfmd_df['F_Value']/rfmd_df['Duration_Days']
+        rfmd_df['Avg_M'] = rfmd_df['M']/rfmd_df['Duration_Days']
+        rfmd_df['Avg_F'] = rfmd_df['F']/rfmd_df['Duration_Days']
 
         # TODO: Check datatype of Avg cols
-        rfmd_df = rfmd_df.round({'Avg_F_Value': 3, 'Avg_M_Value': 2})
+        rfmd_df = rfmd_df.round({'Avg_F': 3, 'Avg_M': 2})
 
         return rfmd_df
 
+    def fix_outliers(self, df, column):
+        df_copy = df.copy()
+
+        # Ref: https://app.pluralsight.com/guides/cleaning-up-data-from-outliers
+        # Finding outliers
+        quartile1 = df[column].quantile(0.25)
+        quartile3 = df[column].quantile(0.75)
+        inter_quartile_range = quartile3 - quartile1
+
+        df_copy["Is_Outlier"] = (df_copy[column] < (quartile1 - 1.5 * inter_quartile_range)
+                                 ) | (df_copy[column] > (quartile3 + 1.5 * inter_quartile_range))
+
+        # Dropping outliers
+        df_copy = df_copy.loc[(df_copy["Is_Outlier"] != True)]
+        df_copy.drop("Is_Outlier", axis=1, inplace=True)
+
+        return df_copy
+
     def cluster_average_rfm_values(self, rfmd_df):
         medians_m = self.calculate_and_save_kmedians(
-            rfmd_df, 'Avg_M_Value', 'm')
+            rfmd_df, 'Avg_M', 'm')
 
         medians_f = self.calculate_and_save_kmedians(
-            rfmd_df, 'Avg_F_Value', 'f')
+            rfmd_df, 'Avg_F', 'f')
 
-        rfmd_df = self.get_rfm_df_with_scores(
-            rfmd_df, medians_m, medians_f)
+        # rfmd_df = self.get_rfm_df_with_scores(
+        #     rfmd_df, medians_m, medians_f)
 
-        rfmd_df = rfmd_df.round({'RFM_Score': 2})
+        # rfmd_df = rfmd_df.round({'RFM_Score': 2})
 
         return rfmd_df
 
@@ -216,13 +162,12 @@ class RFM():
             relativedelta(months=-self.rfm_parameters.get("data_period"))
 
         rfm_df = self.get_base_rfm_df(date_before_period, cur_date)
+
+        rfm_df = self.merge_with_duration(rfm_df, cur_date)
+
+        rfm_df = self.get_average_rfm_df(rfm_df)
         print(rfm_df.head())
-        # rfmd_df = self.merge_with_duration(
-        #     rfm_df, date_before_period, cur_date)
-
-        # rfmd_df = self.get_average_rfm_df(rfmd_df)
-
-        # rfmd_df = self.cluster_average_rfm_values(rfmd_df)
+        rfm_df = self.cluster_average_rfm_values(rfm_df)
 
         # return rfmd_df
         return True

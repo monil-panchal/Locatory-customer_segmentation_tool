@@ -19,6 +19,7 @@ class GlobalConfig(BaseSettings):
     SECRET_KEY: str = None
     ACCESS_TOKEN_EXPIRE_MINUTES: int = None
     LOG_PATH: str = None
+    MODELS_PATH: str = None
     MONGODB_URL: str = None
     MONGODB_PORT: int = None
     MONGODB_DATABASE_NAME: str = None
