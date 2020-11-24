@@ -11,7 +11,8 @@ from dash.exceptions import PreventUpdate
 from apps.user.sales import Sales
 
 from app import app
-from apps.views.graphs.bar_line_combo_graph import generate_bar_graph_by_orders, generate_bar_graph_by_sales
+from apps.views.graphs.sales_bar_graph import generate_bar_graph_by_orders, generate_bar_graph_by_sales
+from apps.views.graphs.sales_pie_chart import generate_pie_chart_by_location
 from apps.dataframe.process_sales_dashboard_df import add_year_month_week
 
 time_line = {}
@@ -41,9 +42,6 @@ def process_current_dashboard_data(filter_data_options: dict, sales_dashboard_df
         previous_df = previous_df.reset_index(drop=True)
 
         current_df, previous_df = add_year_month_week(current_df, previous_df)
-
-        print(f'current df: {current_df}')
-        print(f'previous_df df: {previous_df}')
 
         total_orders = current_df.shape[0]
         dashboard_data_stat['total_orders'] = total_orders
@@ -126,7 +124,8 @@ def fetch_current_dashboard_data(data: dict):
     sales_dashboard_data = Sales().get_orders_for_dashboard(data)
 
     global current_df
-    current_df = pd.DataFrame(sales_dashboard_data)
+    # current_df = pd.DataFrame(sales_dashboard_data)
+    current_df = pd.json_normalize(sales_dashboard_data)
     process_current_dashboard_data(data, current_df)
 
     return data
@@ -183,9 +182,9 @@ card_dashboard_stat = dbc.CardDeck(
 )
 
 """
-Card deck for visualization
+Card deck for bar chart visualization
 """
-card_dashboard_graphs = dbc.CardDeck(
+card_dashboard_bar_graphs = dbc.CardDeck(
     [
         dbc.Card(
             dbc.CardBody(
@@ -198,6 +197,28 @@ card_dashboard_graphs = dbc.CardDeck(
             dbc.CardBody(
                 [
                     dcc.Graph(id='bar_graph_sales')
+                ]
+            ), color="dark", outline=True
+        )
+    ]
+)
+
+"""
+Card deck for bar chart visualization
+"""
+card_dashboard_pie_graphs = dbc.CardDeck(
+    [
+        dbc.Card(
+            dbc.CardBody(
+                [
+                    dcc.Graph(id='pie_chart_location')
+                ]
+            ), color="dark", outline=True
+        ),
+        dbc.Card(
+            dbc.CardBody(
+                [
+                    dcc.Graph(id='pie_chart_category')
                 ]
             ), color="dark", outline=True
         )
@@ -277,17 +298,25 @@ layout = html.Div([
         dbc.Col([
             dbc.Row([
                 dbc.Col([
-                    html.Div(children=[
-                        card_dashboard_stat
-                    ], id='stat')
-                ], style={'position': 'sticky', 'top': '0'})
+                    html.Div([
+                        dbc.Card(card_dashboard_stat)
+                    ], id='stat', style={'position': 'sticky', 'top': '0'})
+                ])
             ]),
             html.Br(),
             dbc.Row([
                 dbc.Col([
                     html.Div(children=[
-                        card_dashboard_graphs
+                        card_dashboard_bar_graphs
                     ], id='graphs')
+                ]),
+            ]),
+            html.Br(),
+            dbc.Row([
+                dbc.Col([
+                    html.Div(children=[
+                        card_dashboard_pie_graphs
+                    ], id='graph_pie')
                 ]),
             ])
         ])
@@ -386,7 +415,8 @@ def display_geo_data_cities(country, state):
      Output('lowest_order_value', 'children'),
      Output('average_order_value', 'children'),
      Output('bar_graph_orders', 'figure'),
-     Output('bar_graph_sales', 'figure')],
+     Output('bar_graph_sales', 'figure'),
+     Output('pie_chart_location', 'figure')],
     Input('view_dashboard', 'n_clicks'),
     [State('year-selector', 'value'),
      State('month-selector', 'value'),
@@ -415,13 +445,25 @@ def submit_dashboard_request(n_clicks, year, month, country, state, city):
 
             data = fetch_current_dashboard_data(data)
 
-            if data.get('prev_month'):
-                type = 'month'
-            else:
-                type = 'year'
+            if not (current_df.empty or previous_df.empty):
+                if data.get('prev_month'):
+                    bar_graph_type = 'month'
+                else:
+                    bar_graph_type = 'year'
+                bar_graph_by_orders = generate_bar_graph_by_orders(current_df, previous_df, bar_graph_type)
+                bar_graph_by_sales = generate_bar_graph_by_sales(current_df, previous_df, bar_graph_type)
 
-            bar_graph_by_orders = generate_bar_graph_by_orders(current_df, previous_df, type)
-            bar_graph_by_sales = generate_bar_graph_by_sales(current_df, previous_df, type)
+                if data.get('state', None) is None:
+                    pie_chart_type = 'country'
+                elif not data.get('state') is None:
+                    pie_chart_type = 'state'
+
+                if not data.get('city') is None:
+                    pie_chart_type = 'city'
+
+                pie_chart_by_location = generate_pie_chart_by_location(current_df, pie_chart_type)
+            else:
+                bar_graph_by_sales, bar_graph_by_orders, pie_chart_by_location = {}, {}, {}
 
             return None, dashboard_data_stat.get('total_orders', 0), \
                    "$ " + str(dashboard_data_stat.get('total_sales', 0.0)), \
@@ -429,6 +471,6 @@ def submit_dashboard_request(n_clicks, year, month, country, state, city):
                    "$ " + str(dashboard_data_stat.get('lowest_order_value', 0.0)), \
                    "$ " + str(dashboard_data_stat.get('average_order_value', 0.0)), \
                    bar_graph_by_orders, \
-                   bar_graph_by_sales
+                   bar_graph_by_sales, pie_chart_by_location
     else:
-        return None, None, None, None, None, None, {}, {}
+        return None, None, None, None, None, None, {}, {}, {}
