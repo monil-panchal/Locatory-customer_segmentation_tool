@@ -14,6 +14,7 @@ from app import app
 from apps.views.graphs.sales_bar_graph import generate_bar_graph_by_orders, generate_bar_graph_by_sales
 from apps.views.graphs.sales_pie_chart import generate_pie_chart_by_location, generate_pie_chart_by_product_category
 from apps.dataframe.process_sales_dashboard_df import add_year_month_week
+from apps.views.graphs.sales_density_map import generate_density_map
 
 time_line = {}
 geo_data = {}
@@ -227,6 +228,21 @@ card_dashboard_pie_graphs = dbc.CardDeck(
     ]
 )
 
+"""
+Card deck for bar chart visualization
+"""
+card_dashboard_map = dbc.CardDeck(
+    [
+        dbc.Card(
+            dbc.CardBody(
+                [
+                    dcc.Graph(id='map_sales')
+                ]
+            ), color="dark", outline=True
+        )
+    ]
+)
+
 card_content_1 = [
     dbc.CardHeader("Filter by timeline"),
     dbc.CardBody(
@@ -319,6 +335,14 @@ layout = html.Div([
                     html.Div(children=[
                         card_dashboard_pie_graphs
                     ], id='graph_pie')
+                ]),
+            ]),
+            html.Br(),
+            dbc.Row([
+                dbc.Col([
+                    html.Div([
+                        card_dashboard_map
+                    ], id='graph_map')
                 ]),
             ])
         ])
@@ -419,7 +443,8 @@ def display_geo_data_cities(country, state):
      Output('bar_graph_orders', 'figure'),
      Output('bar_graph_sales', 'figure'),
      Output('pie_chart_location', 'figure'),
-     Output('pie_chart_item_category', 'figure')],
+     Output('pie_chart_item_category', 'figure'),
+     Output('map_sales', 'figure')],
     Input('view_dashboard', 'n_clicks'),
     [State('year-selector', 'value'),
      State('month-selector', 'value'),
@@ -465,11 +490,14 @@ def submit_dashboard_request(n_clicks, year, month, country, state, city):
 
                 pie_chart_by_location = generate_pie_chart_by_location(current_df, pie_chart_type)
                 pie_chart_by_item_category = generate_pie_chart_by_product_category(current_df)
+
+                map_sales = generate_density_map(current_df)
             else:
                 bar_graph_by_sales, \
                 bar_graph_by_orders, \
                 pie_chart_by_location, \
-                pie_chart_by_item_category = {}, {}, {}, {}
+                pie_chart_by_item_category, \
+                map_sales = {}, {}, {}, {}, {}
 
             return None, dashboard_data_stat.get('total_orders', 0), \
                    "$ " + str(dashboard_data_stat.get('total_sales', 0.0)), \
@@ -477,6 +505,6 @@ def submit_dashboard_request(n_clicks, year, month, country, state, city):
                    "$ " + str(dashboard_data_stat.get('lowest_order_value', 0.0)), \
                    "$ " + str(dashboard_data_stat.get('average_order_value', 0.0)), \
                    bar_graph_by_orders, \
-                   bar_graph_by_sales, pie_chart_by_location, pie_chart_by_item_category
+                   bar_graph_by_sales, pie_chart_by_location, pie_chart_by_item_category, map_sales
     else:
-        return None, None, None, None, None, None, {}, {}, {}, {}
+        return None, None, None, None, None, None, {}, {}, {}, {}, {}
