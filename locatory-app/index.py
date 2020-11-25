@@ -9,6 +9,7 @@ from apps.views import login, map_dashboard, other_dashboard, profile, sales_das
 
 navBar = dbc.Navbar(id='navBar',
                     children=[],
+                    sticky='top',
                     color='primary',
                     className='navbar navbar-expand-lg navbar-dark bg-primary',
                     )

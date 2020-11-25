@@ -156,6 +156,7 @@ def set_dropdown(href):
         print(dropdown_values)
         return dropdown_values
 
+
 @app.callback(Output('graph1', 'figure'),
               [Input('dropdown1', 'value'), Input('dropdown2', 'value'), Input('dropdown3', 'value'),
                Input('dropdown4', 'value'), Input('url', 'href')]
@@ -189,8 +190,9 @@ def update_fig(dropdown1, dropdown2, dropdown3, dropdown4, href):
         customer_df["m"] = 1
         customer_df["rfm"] = 1
 
-        # Randomly generating the score values TODO: Remove this and integrate with the actual RFM Model
-        # TODO: Remove these below lines of code and flow is maintained from line 227 without any code addition.
+        # Randomly generating the score values TODO: Remove this and integrate with the actual RFM Model.
+        #  TODO:  Remove these below lines of code from 202 and flow is maintained from line 227 without any code
+        #   addition.
         # print(dropdown1)
 
         # Retrieve that particular row
@@ -198,28 +200,28 @@ def update_fig(dropdown1, dropdown2, dropdown3, dropdown4, href):
         rfm_model.reset_index(inplace=True)
         # print(rfm_model)
         rfm_model.at[0, 'R_score1'] = customer_df[0:18973]["customer_id"].to_list()
-        rfm_model.at[0, 'R_score2'] = customer_df[18974:37946]["customer_id"].to_list()
-        rfm_model.at[0, 'R_score3'] = customer_df[37947:56919]["customer_id"].to_list()
-        rfm_model.at[0, 'R_score4'] = customer_df[56920:75894]["customer_id"].to_list()
-        rfm_model.at[0, 'R_score5'] = customer_df[75895:94865]["customer_id"].to_list()
+        rfm_model.at[0, 'R_score2'] = customer_df[18973:37946]["customer_id"].to_list()
+        rfm_model.at[0, 'R_score3'] = customer_df[37946:56919]["customer_id"].to_list()
+        rfm_model.at[0, 'R_score4'] = customer_df[56919:75894]["customer_id"].to_list()
+        rfm_model.at[0, 'R_score5'] = customer_df[75894:94866]["customer_id"].to_list()
 
         rfm_model.at[0, 'F_score1'] = customer_df[0:18973]["customer_id"].to_list()
-        rfm_model.at[0, 'F_score2'] = customer_df[18974:37946]["customer_id"].to_list()
-        rfm_model.at[0, 'F_score3'] = customer_df[37947:56919]["customer_id"].to_list()
-        rfm_model.at[0, 'F_score4'] = customer_df[56920:75894]["customer_id"].to_list()
-        rfm_model.at[0, 'F_score5'] = customer_df[75895:94865]["customer_id"].to_list()
+        rfm_model.at[0, 'F_score2'] = customer_df[18973:37946]["customer_id"].to_list()
+        rfm_model.at[0, 'F_score3'] = customer_df[37946:56919]["customer_id"].to_list()
+        rfm_model.at[0, 'F_score4'] = customer_df[56919:75894]["customer_id"].to_list()
+        rfm_model.at[0, 'F_score5'] = customer_df[75894:94866]["customer_id"].to_list()
 
         rfm_model.at[0, 'M_score1'] = customer_df[0:18973]["customer_id"].to_list()
-        rfm_model.at[0, 'M_score2'] = customer_df[18974:37946]["customer_id"].to_list()
-        rfm_model.at[0, 'M_score3'] = customer_df[37947:56919]["customer_id"].to_list()
-        rfm_model.at[0, 'M_score4'] = customer_df[56920:75894]["customer_id"].to_list()
-        rfm_model.at[0, 'M_score5'] = customer_df[75895:94865]["customer_id"].to_list()
+        rfm_model.at[0, 'M_score2'] = customer_df[18973:37946]["customer_id"].to_list()
+        rfm_model.at[0, 'M_score3'] = customer_df[37946:56919]["customer_id"].to_list()
+        rfm_model.at[0, 'M_score4'] = customer_df[56919:75894]["customer_id"].to_list()
+        rfm_model.at[0, 'M_score5'] = customer_df[75894:94866]["customer_id"].to_list()
 
         rfm_model.at[0, 'segment_a'] = customer_df[0:18973]["customer_id"].to_list()
-        rfm_model.at[0, 'segment_b'] = customer_df[18974:37946]["customer_id"].to_list()
-        rfm_model.at[0, 'segment_c'] = customer_df[37947:56919]["customer_id"].to_list()
-        rfm_model.at[0, 'segment_d'] = customer_df[56920:75894]["customer_id"].to_list()
-        rfm_model.at[0, 'segment_e'] = customer_df[75895:94865]["customer_id"].to_list()
+        rfm_model.at[0, 'segment_b'] = customer_df[18973:37946]["customer_id"].to_list()
+        rfm_model.at[0, 'segment_c'] = customer_df[37946:56919]["customer_id"].to_list()
+        rfm_model.at[0, 'segment_d'] = customer_df[56919:75894]["customer_id"].to_list()
+        rfm_model.at[0, 'segment_e'] = customer_df[75894:94866]["customer_id"].to_list()
 
         # print(rfm_model)
         # print(rfm_model.columns)
@@ -248,20 +250,28 @@ def update_fig(dropdown1, dropdown2, dropdown3, dropdown4, href):
         customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['M_score5']), 'm'] = 5
 
         # Get list of different segmented customers and Update rfm label column
-        customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['segment_a']), 'rfm'] = 1
-        customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['segment_b']), 'rfm'] = 2
-        customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['segment_c']), 'rfm'] = 3
-        customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['segment_d']), 'rfm'] = 4
-        customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['segment_e']), 'rfm'] = 5
+        customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['segment_a']), 'rfm'] = 'a'
+        customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['segment_b']), 'rfm'] = 'b'
+        customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['segment_c']), 'rfm'] = 'c'
+        customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['segment_d']), 'rfm'] = 'd'
+        customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['segment_e']), 'rfm'] = 'e'
+
+        print(customer_df)
+        print(customer_df.columns)
 
         # Define a list of colors
         # Index0 - Empty, Green - class A , Red - class B, Blue - class C, Orange - class D, Yellow - class E
-        color_list = ["", "green", "red", "blue", "orange", "yellow"]
-        final_color_values = []
-        for item in customer_df["rfm"].tolist():
-            final_color_values.append(color_list[item])
-
-        customer_df["rfm_color_values"] = final_color_values
+        color_val = {'a': 'green',
+                     'b': 'red',
+                     'c': 'blue',
+                     'd': 'orange',
+                     'e': 'yellow'}
+        # color_list = ["", "green", "red", "blue", "orange", "yellow"]
+        # final_color_values = []
+        # for item in customer_df["rfm"].tolist():
+        #     final_color_values.append(color_list[item])
+        #
+        # customer_df["rfm_color_values"] = final_color_values
 
         if dropdown2 == 0 or dropdown2 is None or not dropdown2:
             current_df = customer_df
@@ -281,15 +291,29 @@ def update_fig(dropdown1, dropdown2, dropdown3, dropdown4, href):
             # Condensing dataframe based on M value
             current_df = current_df.loc[current_df["m"].isin(dropdown4)]
 
-        locations = [go.Scattermapbox(
-            lon=current_df['long'],
-            lat=current_df['lat'],
-            mode='markers',
-            marker=go.scattermapbox.Marker(
-                size=6,
-                color=current_df["rfm_color_values"]
-            ),
-        )]
+        locations = []
+        for lbl in current_df['rfm'].unique():
+            # Different classes
+            new_df = current_df.loc[current_df["rfm"] == lbl]
+            print('Length of new df is:')
+            print(len(new_df))
+            current_trace_name = "Class-" + lbl
+
+            locations.append(go.Scattermapbox(
+                lon=new_df['long'],
+                lat=new_df['lat'],
+                name=current_trace_name,
+                mode='markers',
+                marker=dict(color=color_val[lbl], size=6),
+                # marker=go.scattermapbox.Marker(
+                #     size=6,
+                #     color=new_df["rfm_color_values"]
+                # ),
+                showlegend=True,
+                text=new_df[["age", "gender", "income"]]
+
+            ))
+
         return {
             'data': locations,
             'layout': go.Layout(
@@ -309,5 +333,24 @@ def update_fig(dropdown1, dropdown2, dropdown3, dropdown4, href):
                     pitch=0,
                     zoom=3
                 ),
+                legend=dict(
+                    yanchor="top",
+                    y=0.7,
+                    xanchor="left",
+                    x=0,
+                    traceorder='normal',
+                    font=dict(
+                        size=12, ),
+                ),
+                # annotations=[
+                #     dict(
+                #         x=0,
+                #         y=0.75,
+                #         xref='paper',
+                #         yref='paper',
+                #         text='Segments',
+                #         showarrow=False
+                #     )
+                # ]
             )
         }
