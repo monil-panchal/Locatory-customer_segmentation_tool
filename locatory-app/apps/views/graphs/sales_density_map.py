@@ -1,7 +1,7 @@
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
-import geopandas
+# import geopandas
 
 mapbox_access_token = 'pk.eyJ1IjoiYWhzLXZhIiwiYSI6ImNraGsyMWVmdDByOWszNnNkdzJqcHpwOWMifQ.llITOAaVvDUflVgenIPPlw'
 
