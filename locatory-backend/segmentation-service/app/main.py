@@ -11,7 +11,6 @@ from .log import Log
 from .api.rfm import endpoints
 
 # Initialize logs
-Log.get_instance().init_logs()
 logger = Log.get_instance().root_logger
 
 # Password: EIsegmentation@2020#4
