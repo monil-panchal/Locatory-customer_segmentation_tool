@@ -1,7 +1,6 @@
 from apps.db.mongo_connection import PyMongo
 import pandas as pd
 
-
 class SingletonDecorator:
     def __init__(self,klass):
         self.klass = klass
@@ -12,7 +11,7 @@ class SingletonDecorator:
         return self.instance
 
 @SingletonDecorator
-class Customer:
+class Customer():
     def __init__(self):
         self.customers = []
 
@@ -22,6 +21,7 @@ class Customer:
         print("fetching customer data from mongodb")
         pymongoObj = PyMongo()
         db = pymongoObj.get_db_connection()
+        customer_list = []
         cursor = db.Customer.find({}, {'name': 1, 'email': 1, 'age': 1, 'gender': 1, 'income': 1, 'address': 1, '_id':0}, batch_size=500)
         for item in cursor:
             customer = {}
@@ -31,7 +31,11 @@ class Customer:
             customer.update(address)
             customer['long'] = coordinates['coordinates'][0]
             customer['lat'] = coordinates['coordinates'][1]
-            self.customers.append(customer)
+            customer_list.append(customer)
+            if(len(customer_list)>500):
+                break
         pymongoObj.close_db_connection()
+        self.customers = customer_list
+        print(len(self.customers))
         return self.customers
 
