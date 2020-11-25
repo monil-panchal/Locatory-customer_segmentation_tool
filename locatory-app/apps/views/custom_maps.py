@@ -26,7 +26,7 @@ def update_income_range_div_modal(value):
 @app.callback(
     Output('segment-segregator_modal', 'value'), Output('segment-segregator_modal', 'pushable'),
     [Input('input_segments', 'value')])
-def update_segment_segregator_modal(value):
+def update_segment_seperator_modal(value):
     print(f'value {value}')
     if value is None or value<3 or value>10:
         return [], 0
@@ -37,7 +37,7 @@ def update_segment_segregator_modal(value):
 @app.callback(
     Output('output-container-segment-segregator_modal', 'children'),
     [Input('segment-segregator_modal', 'value')])
-def update_segment_segregator_text_modal(value):
+def update_segment_seperator_text_modal(value):
     print("segment-segregator", value)
     if len(value)>0 and len(value)<25:
         classes = []
@@ -67,43 +67,33 @@ layout = dbc.Container([
         ], className="mt-4")
 
 @app.callback(
-    Output("modal", "is_open"), Output("toast-message", "header"), Output("toast-message", "children"),
+            Output("toast-message", "header"), Output("toast-message", "children"),
             Output("toast-message", "is_open"), Output('country_checkbox_modal', 'options'),
             Output('gender_checkbox_modal', 'options'), Output('age-range-slider_modal', 'min'),
             Output('age-range-slider_modal', 'max'), Output('age-range-slider_modal', 'value'),
             Output('age-range-slider_modal', 'marks'), Output('income-range-slider_modal', 'min'),
             Output('income-range-slider_modal', 'max'), Output('income-range-slider_modal', 'value'),
             Output('income-range-slider_modal', 'marks'),
-    [Input("open", "n_clicks"), Input("close", "children"), Input("create", "n_clicks")],
+    [Input("open", "n_clicks"), Input("create", "n_clicks")],
     [State("modal", "is_open")] + [State(ele_id, "value") for ele_id in CustomSegmentationParamsModal.get_modal_component_ids()],
 )
-def toggle_modal(n1, n2, create_button, is_open, *modal_component_states_args):
-    print(n1, n2, create_button, is_open, modal_component_states_args)
-    country_checkbox_options = []
-    gender_checkbox_options = []
-    age_range_slider_min = 0
-    age_range_slider_max = 0
-    age_range_slider_value = []
-    age_range_slider_marks = {}
-    income_range_slider_min = 0
-    income_range_slider_max = 0
-    income_range_slider_value = []
-    income_range_slider_marks = {}
+def toggle_modal(n1, create_button, is_open, *modal_component_states_args):
+    print('toggle_modal', n1, create_button, is_open, modal_component_states_args)
+
     toast_message_header = ''
     toast_message_content = ''
     toast_message_open = False
 
-    if n1 is None and n2 is None:
-        return is_open, toast_message_header, toast_message_content, toast_message_open, country_checkbox_options, \
-           gender_checkbox_options, \
-           age_range_slider_min, \
-           age_range_slider_max, \
-           age_range_slider_value, \
-           age_range_slider_marks, \
-           income_range_slider_min, \
-           income_range_slider_max, \
-           income_range_slider_value, \
-           income_range_slider_marks
+    country_checkbox_options, \
+    gender_checkbox_options, \
+    age_range_slider_min, \
+    age_range_slider_max, \
+    age_range_slider_value, \
+    age_range_slider_marks, \
+    income_range_slider_min, \
+    income_range_slider_max, \
+    income_range_slider_value, \
+    income_range_slider_marks = get_modal_filters()
 
     if is_open is True and create_button is not None:
         csp = SegmentationParameters()
@@ -131,19 +121,7 @@ def toggle_modal(n1, n2, create_button, is_open, *modal_component_states_args):
         if toast_message_header != '':
             print(toast_message_content)
             toast_message_open = True
-
-            country_checkbox_options, \
-            gender_checkbox_options, \
-            age_range_slider_min, \
-            age_range_slider_max, \
-            age_range_slider_value, \
-            age_range_slider_marks, \
-            income_range_slider_min, \
-            income_range_slider_max, \
-            income_range_slider_value, \
-            income_range_slider_marks = get_modal_filters()
-
-            return is_open, toast_message_header, toast_message_content, toast_message_open, \
+            return toast_message_header, toast_message_content, toast_message_open, \
                    country_checkbox_options, \
                    gender_checkbox_options, \
                    age_range_slider_min, \
@@ -162,20 +140,7 @@ def toggle_modal(n1, n2, create_button, is_open, *modal_component_states_args):
         except Exception as e:
             print(e)
 
-    if is_open is False or is_open is None:
-        country_checkbox_options, \
-        gender_checkbox_options, \
-        age_range_slider_min, \
-        age_range_slider_max, \
-        age_range_slider_value, \
-        age_range_slider_marks, \
-        income_range_slider_min, \
-        income_range_slider_max, \
-        income_range_slider_value, \
-        income_range_slider_marks = get_modal_filters()
-
-
-    return not is_open, toast_message_header, toast_message_content, toast_message_open, country_checkbox_options, \
+    return toast_message_header, toast_message_content, toast_message_open, country_checkbox_options, \
            gender_checkbox_options, \
            age_range_slider_min, \
            age_range_slider_max, \
@@ -241,14 +206,39 @@ def update_city_modal_dropdown(value):
         {'label': f"{key}", 'value': key} for key in unique_cities
     ]
 
-@app.callback(Output('cards-content', 'children'), Output('modal', 'children'),
-              [Input('url', 'href')], [State("modal", "is_open")])
-def display_custom_page(href, is_open):
-    print("card_href "+href, is_open)
+@app.callback(Output('cards-content', 'children'), Output("modal", "is_open"),
+              [Input('url', 'href'), Input("open", "n_clicks"), Input("close", "n_clicks")],
+              [State("modal", "is_open")])
+def display_custom_param_list_page(href, open, close, is_open):
+    # print("card_href "+href, is_open)
+    print('in close',href, open, close, is_open)
     cards_list = []
-    if href is not None and 'custom_maps_list' == href.split('/')[-1]:
+    # if modal_children is None:
+    #     modal_children = CustomSegmentationParamsModal.get_modal_elements()
+    if is_open is None and href is not None and 'custom_maps_list' == href.split('/')[-1]:
         cards_list = create_custom_params_card_list()
-    return cards_list, CustomSegmentationParamsModal.get_modal_elements()
+
+    if is_open is True and close is not None:
+        is_open = False
+        cards_list = create_custom_params_card_list()
+    elif (is_open is False or is_open is None) and open is not None:
+        is_open = True
+
+
+    return cards_list, is_open
+
+# @app.callback(
+#     Output("modal", "is_open"),
+#     [Input("open", "n_clicks"), Input("close", "n_clicks")],
+#     [State("modal", "is_open")],
+# )
+# def close_modal(open, close, is_open):
+#     print('in close', open, close, is_open)
+#     if is_open is True and close is not None:
+#         is_open = False
+#     elif (is_open is False or is_open is None) and open is not None:
+#         is_open = True
+#     return is_open
 
 def create_custom_params_card_list():
     cards_list = []
@@ -274,7 +264,7 @@ def create_custom_params_card_list():
                 class_ranges.append(f"Class {class_name}: [{int(segment_separators[ind]*100)} - {int(segment_separators[ind + 1]*100)}]")
                 class_name = chr(ord(class_name) - 1)
             class_ranges.append(
-                f"Class {chr(ord(class_name) - 1)}: [{int(segment_separators[-1] * 100)} - {100}]")
+                f"Class {chr(ord(class_name))}: [{int(segment_separators[-1] * 100)} - {100}]")
             card_body.append(html.P(
                 f"Segment seperators ranges:  {',    '.join(class_ranges)}",
                 className="card-text",
@@ -319,7 +309,6 @@ def create_custom_params_card_list():
         cards_list.append(dbc.Card(
             [
                 dbc.CardHeader(
-                    # params.get('title', f'custom map params: {index}'),
                     html.H2(
                         dbc.Button(
                             f"{params.get('title', f'Custom map params #{index + 1}')}",
@@ -338,35 +327,16 @@ def create_custom_params_card_list():
     return cards_list
 
 # define callbacks for card accordions with ids collapse-{i}
-for index in range(1, SegmentationParameters().total_count()+1):
+print("SegmentationParameters().total_count()+", SegmentationParameters().total_count())
+for index in range(1, SegmentationParameters().total_count()+1000):
+    print("index", index)
     @app.callback(
         Output(f"collapse-{index}", "is_open"),
         [Input(f"group-{index}-toggle", "n_clicks")],
         [State(f"collapse-{index}", "is_open")],
     )
     def toggle_collapse(n, is_open):
-        print(index, n, is_open)
+        print('accordian', index, n, is_open)
         if n:
             return not is_open
         return is_open
-
-# @app.callback(
-#     [Output(f"collapse-{i}", "is_open") for i in range(1, len(SegmentationParameters().total_count())+1)],
-#     [Input(f"group-{i}-toggle", "n_clicks") for i in range(1, 4)],
-#     [State(f"collapse-{i}", "is_open") for i in range(1, 4)],
-# )
-# def toggle_accordion(n1, n2, n3, is_open1, is_open2, is_open3):
-#     ctx = dash.callback_context
-#
-#     if not ctx.triggered:
-#         return False, False, False
-#     else:
-#         button_id = ctx.triggered[0]["prop_id"].split(".")[0]
-#
-#     if button_id == "group-1-toggle" and n1:
-#         return not is_open1, False, False
-#     elif button_id == "group-2-toggle" and n2:
-#         return False, not is_open2, False
-#     elif button_id == "group-3-toggle" and n3:
-#         return False, False, not is_open3
-#     return False, False, False
