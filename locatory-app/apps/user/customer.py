@@ -1,7 +1,6 @@
 from apps.db.mongo_connection import PyMongo
 import pandas as pd
 
-
 class SingletonDecorator:
     def __init__(self, klass):
         self.klass = klass

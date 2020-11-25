@@ -5,10 +5,11 @@ from dash.dependencies import Input, Output
 from flask_login import current_user, logout_user
 
 from app import app
-from apps.views import login, map_dashboard, other_dashboard, profile, sales_dashboard
+from apps.views import login, map_dashboard, other_dashboard, profile, sales_dashboard, custom_maps
 
 navBar = dbc.Navbar(id='navBar',
                     children=[],
+                    sticky='top',
                     color='primary',
                     className='navbar navbar-expand-lg navbar-dark bg-primary',
                     )
@@ -62,6 +63,12 @@ def display_page(pathname):
         else:
             return login.layout
 
+    if pathname == '/custom_maps_list':
+        if current_user.is_authenticated:
+            return custom_maps.layout
+        else:
+            return login.layout
+
 
 @app.callback(
     Output('navBar', 'children'),
@@ -72,6 +79,7 @@ def navBar(input1):
             dbc.NavItem(dbc.NavLink('Sales Dashboard', href='/sales_dashboard')),
             dbc.NavItem(dbc.NavLink('Map Dashboard', href='/map_dashboard')),
             dbc.NavItem(dbc.NavLink('Default RFM Dashboard', href='/other_dashboard')),
+            dbc.NavItem(dbc.NavLink('Custom Maps List', href='/custom_maps_list')),
             dbc.DropdownMenu(
                 nav=True,
                 in_navbar=True,
