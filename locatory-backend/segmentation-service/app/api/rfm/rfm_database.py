@@ -1,5 +1,6 @@
 import pandas as pd
 
+from bson.objectid import ObjectId
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from pymongo import IndexModel, ASCENDING, DESCENDING
@@ -48,9 +49,12 @@ class RFMDatabase:
     def get_database_password(self):
         return cfg.MONGODB_PASSWORD
 
-    def run_query(self, query):
-        data = query
-        return data
+    def insert_one_document(self, doc_data, collection):
+        doc_id = collection.insert_one(doc_data).inserted_id
+        return doc_id
+
+    def find_one_document(self, query_dict, collection):
+        return collection.find_one(query_dict)
 
     def add_rfm_date_match_query(self, and_query_list, start_date, end_date):
         date_query = {"order_date": {'$gte': start_date, '$lt': end_date}}
@@ -73,11 +77,16 @@ class RFMDatabase:
         return and_query_list
 
     def add_rfm_geography_match_query(self, and_query_list, geography_data):
+        or_query_list = []
+
         if geography_data:
             for k, v in geography_data.items():
                 if v:
-                    and_query_list.append(
+                    or_query_list.append(
                         {"customer.address.customer_"+k: {"$in": v}})
+
+            if or_query_list:
+                and_query_list.append({"$or": or_query_list})
 
         return and_query_list
 
@@ -123,3 +132,61 @@ class RFMDatabase:
         df = pd.DataFrame(list(data))
 
         return df
+
+    def get_segmentation_parameters(self, document_id):
+        query = {"_id": ObjectId(document_id)}
+        rfm_parameters = self.find_one_document(
+            query, self._db["SegmentationParameters"])
+
+        return rfm_parameters
+
+    def get_label_wise_customer_ids_list(self, df, label_col, cust_id_col, first_label):
+        label_data = {first_label: {}}
+        unique_scores = sorted(list(set(df[label_col].tolist())))
+
+        for score in unique_scores:
+            customer_ids = df.loc[(df[label_col] == score)][
+                cust_id_col].tolist()
+            label_data[first_label][str(score)] = {
+                "customer_ids": list(set(customer_ids))}
+
+        return label_data
+
+    def add_rfm_data_for_rfmsegments_collection(self, data, rfm_df):
+        data["R"] = self.get_label_wise_customer_ids_list(
+            rfm_df, "R_Score", "_id", "score")
+        data["F"] = self.get_label_wise_customer_ids_list(
+            rfm_df, "Avg_F_Score", "_id", "score")
+        data["M"] = self.get_label_wise_customer_ids_list(
+            rfm_df, "Avg_M_Score", "_id", "score")
+        data["RFM"] = self.get_label_wise_customer_ids_list(
+            rfm_df, "RFM_Label", "_id", "segments")
+
+        return data
+
+    def data_for_rfmsegments_collection(self, rfm_df, document_id, rfm_parameters, start_date, end_date):
+        data = {"segmentation_parameters_id": document_id, "organization_id": 1, "start_date": start_date,
+                "end_date": end_date, "period_month": rfm_parameters.get("data_period"),
+                "segment_count": rfm_parameters.get("n_segments")}
+
+        # Add R,F,M, and RFM_Label customer data to data
+        data = self.add_rfm_data_for_rfmsegments_collection(data, rfm_df)
+
+        # Add geographic and demographic data
+        if rfm_parameters.get("geography"):
+            data["location"] = rfm_parameters.get("geography")
+
+        if rfm_parameters.get("demography"):
+            data["demography"] = rfm_parameters.get("demography")
+
+        return data
+
+    def save_rfm_segments_data(self, rfm_df, document_id, rfm_parameters, start_date, end_date):
+        doc_data = self.data_for_rfmsegments_collection(
+            rfm_df, document_id, rfm_parameters, start_date, end_date)
+
+        # TODO: Oerwrite based on month
+        document_id = self.insert_one_document(
+            doc_data, self._db["RFMSegments"])
+
+        return document_id

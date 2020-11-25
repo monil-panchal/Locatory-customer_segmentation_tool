@@ -29,7 +29,11 @@ class RFMParametersValidation(BaseModel):
     demography: Optional[Demography] = None
     geography: Optional[Geography] = None
 
-    @validator('n_segments')
-    def passwords_match(cls, v, values):
-        if 'segment_separators' in values and v != values['segment_separators']:
-            raise ValueError('segment_separators length must match n_segments')
+    # @validator('n_segments')
+    # def passwords_match(cls, v, values):
+    #     if 'segment_separators' in values and v != values['segment_separators']:
+    #         raise ValueError('segment_separators length must match n_segments')
+
+
+class DocumentIDValidation(BaseModel):
+    document_id: str

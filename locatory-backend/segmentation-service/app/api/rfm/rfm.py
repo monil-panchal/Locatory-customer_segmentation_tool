@@ -3,37 +3,24 @@ from dateutil.relativedelta import relativedelta
 import numpy as np
 import pandas as pd
 
-import app.api.rfm.stats
 from .rfm_database import RFMDatabase
+from .clustering import Clustering
 
 
 class RFM():
 
-    def __init__(self, parameters_dict):
+    def __init__(self, parameters_dict, document_id):
         self.rfm_parameters = parameters_dict
+        self.document_id = document_id
 
     # Methods for RFM Table
-    def get_recency_class(self, r_value):
-        if r_value <= 30:
-            r_class = 5
-
-        elif r_value > 30 and r_value <= 60:
-            r_class = 4
-
-        elif r_value > 60 and r_value <= 90:
-            r_class = 3
-
-        elif r_value > 90 and r_value <= 180:
-            r_class = 2
-
-        else:
-            r_class = 1
-
-        return r_class
 
     def get_base_rfm_df(self, start_date, end_date):
         rfm_df = RFMDatabase.get_instance().get_rfm_dataframe(
             start_date, end_date, self.rfm_parameters)
+
+        if rfm_df.empty:
+            return rfm_df
 
         rfm_df['R'] = (
             end_date - pd.to_datetime(rfm_df['Latest_Order_Date'], errors='coerce')).dt.days
@@ -54,65 +41,56 @@ class RFM():
 
         return rfm_df
 
-    def assign_rfm_class(self, score, df, i, col):
-        if score <= 0.2:
-            df.set_value(i, col, 'E')
+    def set_recency_scores(self, df):
+        # Recency score will always be in between 1 to 5
+        # TODO: Improve for different n_segments
+        df.loc[(df["R"] <= 30), 'R_Score'] = 5
+        df.loc[((df["R"] > 30) & (df["R"] <= 60)), 'R_Score'] = 4
+        df.loc[((df["R"] > 60) & (df["R"] <= 90)), 'R_Score'] = 3
+        df.loc[((df["R"] > 90) & (df["R"] <= 180)), 'R_Score'] = 2
+        df.loc[(df["R"] > 180), 'R_Score'] = 1
 
-        elif score > 0.2 and score <= 0.4:
-            df.set_value(i, col, 'D')
-
-        elif score > 0.4 and score <= 0.6:
-            df.set_value(i, col, 'C')
-
-        elif score > 0.6 and score <= 0.8:
-            df.set_value(i, col, 'B')
-
-        else:
-            df.set_value(i, col, 'A')
+        # Convert R_Score to integer
+        df["R_Score"] = df["R_Score"].astype(int)
 
         return df
 
-    def get_rfm_df_with_scores(self, x_df, medians_m, medians_f, req):
-        x_df['R_Score'] = 0
-        x_df['F_Score'] = 0
-        x_df['M_Score'] = 0
+    def assign_rfm_labels(self, df):
+        # Max 10 labels because n_segments falls between 3 and 10
+        possible_labels = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
 
-        # if req != 'insights':
-        x_df['Duration_Score'] = 0
+        n_segments = self.rfm_parameters.get("n_segments")
+        possible_labels = possible_labels[:n_segments]
+        segment_separators = self.rfm_parameters.get("segment_separators")
 
-        x_df['RFM_Score'] = 0.0
-        x_df['Reliability'] = 0.0
+        if not segment_separators:
+            part_duration = 1 / n_segments
+            segment_separators = [
+                round(i * part_duration, 2) for i in range(n_segments)]
 
-        final_medians_m, key_val_m = self.get_kmedian_clusters(medians_m)
-        final_medians_f, key_val_f = self.get_kmedian_clusters(medians_f)
+        for idx, segment_start in enumerate(segment_separators[:-1]):
+            df.loc[((df["RFM_Score"] >= segment_start) & (
+                df["RFM_Score"] < segment_separators[idx+1])), 'RFM_Label'] = possible_labels[n_segments-1-idx]
 
-        for i in range(len(x_df)):
-            m_value = x_df.get_value(i, 'Avg_M')
-            r_value = x_df.get_value(i, 'R')
-            f_value = x_df.get_value(i, 'Avg_F')
-            pv_value = x_df.get_value(i, 'PV_Ratio')
-            dur_value = x_df.get_value(i, 'Duration_Days')
+        # Adding last label - A class
+        df.loc[(df["RFM_Score"] >= segment_separators[-1]),
+               'RFM_Label'] = possible_labels[0]
 
-            # Recency Score
-            r_class = self.get_recency_class(r_value)
-            x_df.set_value(i, 'R_Score', r_class)
+        return df
 
-            # Frequency Score
-            f_class = self.get_class_kmedians(
-                f_value, final_medians_f, key_val_f)
-            x_df.set_value(i, 'F_Score', f_class)
+    def get_rfm_df_with_scores(self, df):
+        n_segments = self.rfm_parameters.get("n_segments")
 
-            # Monetary Score
-            m_class = self.get_class_kmedians(
-                m_value, final_medians_m, key_val_m)
-            x_df.set_value(i, 'M_Score', m_class)
+        # Setting Recency scores - Monetary and Frequency scores were already set during clustering
+        df = self.set_recency_scores(df)
 
-            score = float(int(r_class) + int(f_class) + int(m_class))/float(15)
-            x_df.set_value(i, 'RFM_Score', score)
+        # Setting RFM scores and labels
+        df["RFM_Score"] = (df["R_Score"] + df["Avg_M_Score"] +
+                           df["Avg_F_Score"])/float((n_segments*2) + 5)
+        df = df.round({'RFM_Score': 3})
+        df = self.assign_rfm_labels(df)
 
-            x_df = self.assign_rfm_class(score, x_df, i, 'RFM_Label')
-
-        return x_df
+        return df
 
     def get_average_rfm_df(self, rfmd_df):
         rfmd_df['Avg_M'] = rfmd_df['M']/rfmd_df['Duration_Days']
@@ -123,35 +101,14 @@ class RFM():
 
         return rfmd_df
 
-    def fix_outliers(self, df, column):
-        df_copy = df.copy()
-
-        # Ref: https://app.pluralsight.com/guides/cleaning-up-data-from-outliers
-        # Finding outliers
-        quartile1 = df[column].quantile(0.25)
-        quartile3 = df[column].quantile(0.75)
-        inter_quartile_range = quartile3 - quartile1
-
-        df_copy["Is_Outlier"] = (df_copy[column] < (quartile1 - 1.5 * inter_quartile_range)
-                                 ) | (df_copy[column] > (quartile3 + 1.5 * inter_quartile_range))
-
-        # Dropping outliers
-        df_copy = df_copy.loc[(df_copy["Is_Outlier"] != True)]
-        df_copy.drop("Is_Outlier", axis=1, inplace=True)
-
-        return df_copy
-
     def cluster_average_rfm_values(self, rfmd_df):
-        medians_m = self.calculate_and_save_kmedians(
-            rfmd_df, 'Avg_M', 'm')
+        rfmd_df = Clustering.get_instance().get_kmeans_clustered_df(
+            rfmd_df, 'Avg_M', 'm', self.document_id, self.rfm_parameters.get("n_segments"))
 
-        medians_f = self.calculate_and_save_kmedians(
-            rfmd_df, 'Avg_F', 'f')
+        rfmd_df = Clustering.get_instance().get_kmeans_clustered_df(
+            rfmd_df, 'Avg_F', 'f', self.document_id, self.rfm_parameters.get("n_segments"))
 
-        # rfmd_df = self.get_rfm_df_with_scores(
-        #     rfmd_df, medians_m, medians_f)
-
-        # rfmd_df = rfmd_df.round({'RFM_Score': 2})
+        rfmd_df = self.get_rfm_df_with_scores(rfmd_df)
 
         return rfmd_df
 
@@ -162,12 +119,11 @@ class RFM():
             relativedelta(months=-self.rfm_parameters.get("data_period"))
 
         rfm_df = self.get_base_rfm_df(date_before_period, cur_date)
+        if not rfm_df.empty:
+            rfm_df = self.merge_with_duration(rfm_df, cur_date)
 
-        rfm_df = self.merge_with_duration(rfm_df, cur_date)
+            rfm_df = self.get_average_rfm_df(rfm_df)
 
-        rfm_df = self.get_average_rfm_df(rfm_df)
-        print(rfm_df.head())
-        rfm_df = self.cluster_average_rfm_values(rfm_df)
+            rfm_df = self.cluster_average_rfm_values(rfm_df)
 
-        # return rfmd_df
-        return True
+        return rfm_df, date_before_period, cur_date
