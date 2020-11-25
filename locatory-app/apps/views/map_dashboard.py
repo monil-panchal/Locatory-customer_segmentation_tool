@@ -6,110 +6,107 @@ import plotly.graph_objects as go
 from apps.user.customer import Customer
 from dash.dependencies import Input, Output, State
 from app import app
+from apps.config.constants import brazil_state_code_map, mapbox_access_token
 
-brazil_state_code_map = {
-'AC':'Acre',
-'AL':'Alagoas',
-'AP':'Amapá',
-'AM':'Amazonas',
-'BA':'Bahia',
-'CE':'Ceará',
-'DF':'Distrito Federal',
-'ES':'Espírito Santo',
-'GO':'Goiás',
-'MA':'Maranhão',
-'MT':'Mato Grosso',
-'MS':'Mato Grosso do Sul',
-'MG':'Minas Gerais',
-'PA':'Pará',
-'PB':'Paraíba',
-'PR':'Paraná',
-'PE':'Pernambuco',
-'PI':'Piauí',
-'RJ':'Rio de Janeiro',
-'RN':'Rio Grande do Norte',
-'RS':'Rio Grande do Sul',
-'RO':'Rondônia',
-'RR':'Roraima',
-'SC':'Santa Catarina',
-'SP':'São Paulo',
-'SE':'Sergipe',
-'TO':'Tocantins',
-}
-mapbox_access_token = 'pk.eyJ1IjoiYWhzLXZhIiwiYSI6ImNraGsyMWVmdDByOWszNnNkdzJqcHpwOWMifQ.llITOAaVvDUflVgenIPPlw'
+select_country_div = html.Div([
+                        dbc.Label("Select Country"),
+                        dcc.Checklist(
+                            id="country_checkbox",
+                            options=[
+
+                            ],
+                            value=['Brazil'],
+                            labelStyle={'display': 'inline-block'}
+                        ),
+                        ])
+
+select_state_div = html.Div([
+                        dbc.Label("Select State"),
+                        dcc.Dropdown(
+                            id="state_dropdown",
+                            options=[
+
+                            ],
+                            value=[],
+                            multi=True,
+                        ),
+                        ])
+
+select_city_div = html.Div([
+                        dbc.Label("Select City"),
+                        dcc.Dropdown(
+                            id="city_dropdown",
+                            options=[
+                            ],
+                            value=[],
+                            multi=True,
+                            ),
+                        ])
+
+select_gender_div = html.Div([
+                        dbc.Label("Select Gender"),
+                        dcc.Checklist(
+                            id="gender_checkbox",
+                            options=[
+
+                            ],
+                            value=['Male'],
+                            labelStyle={'display': 'inline-block'}
+                        ),
+                        ])
+
+select_age_range_div = html.Div([
+                    html.H6('Select Age Range (in years)'),
+                    dcc.RangeSlider(
+                        id='age-range-slider',
+                        step=1,
+                    ),
+                    html.Div(id='output-container-range-slider-age', style={'textAlign': 'center'})
+                    ])
+
+select_income_range_div = html.Div([
+                    html.H6('Select Income Range'),
+                    dcc.RangeSlider(
+                        id='income-range-slider',
+                            step = 100,
+                    ),
+                    html.Div(id='output-container-range-slider-income', style={'textAlign': 'center'})
+                    ])
 
 layout = dbc.Container([
             html.H2('Map Dashboard'),
             html.Hr(),
-            html.Div([
-                dbc.Label("Select Country"),
-                dcc.Checklist(
-                    id="country_checkbox",
-                    options=[
-
-                    ],
-                    value=['Brazil'],
-                    labelStyle={'display': 'inline-block'}
-                ),
-            ]),
-            html.Div([
-                dbc.Label("Select State"),
-                dcc.Checklist(
-                    id="state_checkbox",
-                    options=[
-
-                    ],
-                    value=list(brazil_state_code_map.keys())[:7],
-                    labelStyle={'display': 'inline-block'}
-                ),
-            ]),
-            # html.Br(),
-            # html.Div([
-            #         dbc.Label("Select City"),
-            #         dcc.Checklist(
-            #             id="city_checkbox",
-            #             options=[
-            #             ],
-            #             value=[],
-            #             labelStyle={'display': 'inline-block'}
-            #         ) ,
-            # ]),
-            html.Br(),
-            html.Div([
-                dbc.Label("Select Gender"),
-                dcc.Checklist(
-                    id="gender_checkbox",
-                    options=[
-
-                    ],
-                    value=['Male'],
-                    labelStyle={'display': 'inline-block'}
-                ),
+            dbc.Row([
+                    dbc.Col(
+                        select_country_div,
+                     width="2"),
+                    dbc.Col(
+                        select_state_div
+                        ,width="10"
+                    ),
+                ]),
+            dbc.Row([
+                    dbc.Col(
+                        select_city_div,
+                    width="10"),
+                    dbc.Col(
+                        select_gender_div,
+                     width="2"),
             ]),
             html.Br(),
-            html.Div([
-                html.H6('Select Age Range (in years)'),
-                dcc.RangeSlider(
-                    id='age-range-slider',
-                    step=1,
-                ),
-                html.Div(id='output-container-range-slider-age', style={'textAlign': 'center'})
-            ]),
-            html.Br(),
-            html.Div([
-                html.H6('Select Income Range'),
-                dcc.RangeSlider(
-                    id='income-range-slider',
-                        step = 100,
-                ),
-                html.Div(id='output-container-range-slider-income', style={'textAlign': 'center'})
+            dbc.Row([
+                dbc.Col(
+                    select_age_range_div,
+                    width="6"),
+                dbc.Col(
+                    select_income_range_div,
+                width="6"),
             ]),
             # map
             html.Div([
                 dcc.Graph(id='graph', config={'displayModeBar': False, 'scrollZoom': True},
                           style={'padding-bottom': '2px', 'height': '100vh'})
             ])
-
         ], className="mt-4")
 
 @app.callback(
@@ -125,22 +122,35 @@ def update_income_range_div(value):
     return 'Selected Income Range: "{}"'.format(value)
 
 @app.callback(
-        Output('state_checkbox', 'options'),
+        Output('state_dropdown', 'options'), Output('state_dropdown', 'value'),
         [Input('country_checkbox', 'value')],
         )
-def update_state_checkbox(value):
+def update_state_dropdown(value):
     print(f"options",value)
     customer = Customer()
     customer_df = pd.DataFrame(customer.get_customer_data())
     df = customer_df.loc[customer_df['customer_country'].isin(value)]
+    states = sorted(df['customer_state'].unique())
     return [
-        {'label': f"{brazil_state_code_map[key]}", 'value': key} for key in
-        sorted(df['customer_state'].unique())
-    ]
+        {'label': f"{brazil_state_code_map[key]}", 'value': key} for key in states
+    ], states[0:1]
+
+@app.callback(
+        Output('city_dropdown', 'options'), Output('city_dropdown', 'value'),
+        [Input('state_dropdown', 'value')],
+        )
+def update_city_dropdown(value):
+    print(f"options",value)
+    customer = Customer()
+    customer_df = pd.DataFrame(customer.get_customer_data())
+    unique_cities = customer_df.loc[customer_df['customer_state'].isin(value)]['customer_city'].unique()
+    return [
+        {'label': f"{key}", 'value': key} for key in unique_cities
+    ], unique_cities
 
 @app.callback(Output('graph', 'figure'), [Input('gender_checkbox', 'value'), Input('age-range-slider', 'value'),
                                           Input('income-range-slider', 'value'), Input('country_checkbox', 'value'),
-                                          Input('state_checkbox', 'value')])
+                                          Input('state_dropdown', 'value')])
 def update_fig(gender_values, age_range, income_range, countries, states):
     print(age_range, gender_values, income_range, countries, states)
     customer = Customer()
