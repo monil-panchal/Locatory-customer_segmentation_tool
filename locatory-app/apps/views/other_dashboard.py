@@ -8,7 +8,8 @@ from dash.dependencies import Output, Input, State
 import plotly.graph_objects as go
 from app import app
 import numpy as np
-import random
+import urllib.parse as urlparse
+from urllib.parse import parse_qs
 
 # dbc.Container([
 #
@@ -131,9 +132,23 @@ def show_hide_element(click_value):
 @app.callback(Output('dropdown1', 'options'), [Input('url', 'href')])
 def set_dropdown(href):
     if href is not None:
+
+        # Parse url
+        # print('href is:', href)
+        parsed = urlparse.urlparse(href)
+
+        # Check if no params are passed
+        if len(parse_qs(parsed.query)) == 0:
+            # Assign default parameters object
+            object_id = dummy_obj
+        else:
+            object_id = parse_qs(parsed.query)['id'][0]
+
+        # print('object_id is', object_id)
+
         # Get list of end dates from MongoDB
         rfm = RFMData()
-        end_dates_iso = rfm.get_all_end_dates(dummy_obj)
+        end_dates_iso = rfm.get_all_end_dates(object_id)
         # print(end_dates_iso)
 
         # Parse the end dates iso to get month and year
@@ -155,10 +170,21 @@ def set_dropdown(href):
 def set_fm_dropdown_values(href):
     if href is not None:
 
+        # Parse url
+        # print('href is:', href)
+        parsed = urlparse.urlparse(href)
+
+        # Check if no params are passed
+        if len(parse_qs(parsed.query)) == 0:
+            # Assign default parameters object
+            object_id = dummy_obj
+        else:
+            object_id = parse_qs(parsed.query)['id'][0]
+
         rfm = RFMData()
 
         # Get RFM model size:
-        segment_size = rfm.get_segment_size(dummy_obj)
+        segment_size = rfm.get_segment_size(object_id)
 
         dropdown_labels = []
         for i in range(1, segment_size + 1):
@@ -176,6 +202,20 @@ def set_fm_dropdown_values(href):
               )
 def update_fig(dropdown1, dropdown2, dropdown3, dropdown4, href):
     if href is not None:
+
+        # Parse url
+        # print('href is:', href)
+        parsed = urlparse.urlparse(href)
+
+        # Check if no params are passed
+        if len(parse_qs(parsed.query)) == 0:
+            # Assign default parameters object
+            object_id = dummy_obj
+        else:
+            object_id = parse_qs(parsed.query)['id'][0]
+
+        # print('object id is:', object_id)
+
         # print(customer_df[0:10])
 
         # Set access token
@@ -184,7 +224,7 @@ def update_fig(dropdown1, dropdown2, dropdown3, dropdown4, href):
         rfm = RFMData()
 
         # Should make a call in maps not here
-        rfm_model = pd.DataFrame(rfm.get_records(dummy_obj))
+        rfm_model = pd.DataFrame(rfm.get_records(object_id))
         # print(rfm_model)
         # print(rfm_model.loc[0]['segment_d'])
 
