@@ -10,6 +10,7 @@ from apps.views.custom_segmentation_params_modal import CustomSegmentationParams
 from dash.dependencies import Input, Output, State
 from app import app
 from apps.config.constants import brazil_state_code_map, mapbox_access_token
+from apps.user.RFM import RFM
 
 @app.callback(
     Output('output-container-range-slider-age_modal', 'children'),
@@ -27,18 +28,15 @@ def update_income_range_div_modal(value):
     Output('segment-segregator_modal', 'value'), Output('segment-segregator_modal', 'pushable'),
     [Input('input_segments', 'value')])
 def update_segment_seperator_modal(value):
-    print(f'value {value}')
     if value is None or value<3 or value>10:
         return [], 0
     else:
-        print(f'value {list(np.arange(0, 100, 100/int(value)))}')
         return list(np.arange(0, 100, 100/int(value))), 5
 
 @app.callback(
     Output('output-container-segment-segregator_modal', 'children'),
     [Input('segment-segregator_modal', 'value')])
 def update_segment_seperator_text_modal(value):
-    print("segment-segregator", value)
     if len(value)>0 and len(value)<25:
         classes = []
         for i in range(0, len(value)):
@@ -104,7 +102,6 @@ def toggle_modal(n1, create_button, is_open, *modal_component_states_args):
                 custom_params_dict[key] = list(np.array(val) / 100)
                 continue
             custom_params_dict[key] = val
-        print(create_button, custom_params_dict)
 
         if custom_params_dict.get('input_data') is None or custom_params_dict.get('input_data')<1 \
                 or custom_params_dict.get('input_data')>24:
@@ -117,7 +114,7 @@ def toggle_modal(n1, create_button, is_open, *modal_component_states_args):
         if custom_params_dict.get('custom_params_title') is None or custom_params_dict.get('custom_params_title').strip() == '' or len(custom_params_dict.get('custom_params_title')) > 200:
             toast_message_header = "Validation Error"
             toast_message_content = "Title can not be empty or more than 200 char long."
-        elif csp.is_title_exist(custom_params_dict.get('custom_params_title')) is True:
+        elif csp.is_attribute_exist('title', custom_params_dict.get('custom_params_title')) is True:
             toast_message_header = "Validation Error"
             toast_message_content = f"Title '{custom_params_dict.get('custom_params_title')}' already exist."
 
@@ -136,9 +133,14 @@ def toggle_modal(n1, create_button, is_open, *modal_component_states_args):
                    income_range_slider_value, \
                    income_range_slider_marks
         try:
-            csp.insert_custom_mapping(custom_params_dict)
-            toast_message_header = "Success"
-            toast_message_content = "Custom params successfully created"
+            inserted_id = csp.insert_custom_mapping(custom_params_dict)
+            if inserted_id is not None and inserted_id is not False:
+                response = RFM().create_rfm_segmentation(inserted_id)
+                toast_message_header = "Success"
+                if response is True:
+                    toast_message_content = "Custom params and RFM segmentation successfully created"
+                else:
+                    toast_message_content = "Custom params successfully created, but RFM segmentation was failed."
             toast_message_open = True
         except Exception as e:
             print(e)
@@ -184,7 +186,6 @@ def get_modal_filters():
         [Input('country_checkbox_modal', 'value')],
         )
 def update_state_modal_dropdown(value):
-    print(f"modal_state_options",value)
     customer = Customer()
     customer_df = pd.DataFrame(customer.get_customer_data())
     df = customer_df.loc[customer_df['customer_country'].isin(value)]
@@ -198,7 +199,6 @@ def update_state_modal_dropdown(value):
         [Input('state_dropdown_modal', 'value')],
         )
 def update_city_modal_dropdown(value):
-    print(f"modal_options",value)
     customer = Customer()
     customer_df = pd.DataFrame(customer.get_customer_data())
     unique_cities = customer_df.loc[customer_df['customer_state'].isin(value)]['customer_city'].unique()
@@ -210,7 +210,7 @@ def update_city_modal_dropdown(value):
               [Input('url', 'href'), Input("open", "n_clicks"), Input("close", "n_clicks")],
               [State("modal", "is_open")])
 def display_custom_param_list_page(href, open, close, is_open):
-    print('in close',href, open, close, is_open)
+    print('display_custom_param_list_page',href, open, close, is_open)
     cards_list = []
     if is_open is None and href is not None and 'custom_maps_list' == href.split('/')[-1]:
         cards_list = create_custom_params_card_list()
@@ -228,7 +228,6 @@ def create_custom_params_card_list():
     cards_list = []
     csp = SegmentationParameters()
     custom_params_list = csp.fetch_all_params()
-    print(custom_params_list)
     for index, params in enumerate(custom_params_list):
         card_body = []
         card_body.append(html.P(
@@ -313,7 +312,6 @@ def create_custom_params_card_list():
 # define callbacks for card accordions with ids collapse-{i}
 # print("total", SegmentationParameters().total_count())
 for index in range(1, SegmentationParameters().total_count()+1000):
-    print("index", index)
     @app.callback(
         Output(f"collapse-{index}", "is_open"),
         [Input(f"group-{index}-toggle", "n_clicks")],

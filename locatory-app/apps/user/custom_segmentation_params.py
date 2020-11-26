@@ -1,6 +1,7 @@
 from apps.db.mongo_connection import PyMongo
 import pandas as pd
 import numpy as np
+from bson.objectid import ObjectId
 
 class SegmentationParameters():
 
@@ -69,21 +70,25 @@ class SegmentationParameters():
 
         try:
             print("inserting custom seg params to mongodb")
+            print(insert_dict)
             pymongoObj = PyMongo()
             db = pymongoObj.get_db_connection()
-            db.SegmentationParameters.insert_one(insert_dict)
+            response = db.SegmentationParameters.insert_one(insert_dict)
             pymongoObj.close_db_connection()
+            if response is not None and response.acknowledged is True:
+                return str(response.inserted_id)
         except Exception as e:
             print(e)
             return False
-        print(insert_dict)
-        return True
 
-    def is_title_exist(self, title):
+    def is_attribute_exist(self, field_name, field_value):
         pymongoObj = PyMongo()
         db = pymongoObj.get_db_connection()
-        count = db.SegmentationParameters.count({ "title": f"{title.strip()}" })
+        if field_name == '_id':
+            field_value = ObjectId(field_value)
+        count = db.SegmentationParameters.count({ field_name: field_value })
         if count>0:
             return True
         pymongoObj.close_db_connection()
         return False
+
