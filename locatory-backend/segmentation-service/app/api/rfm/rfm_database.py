@@ -208,16 +208,17 @@ class RFMDatabase:
 
         if data:
             data = list(data)
-            data_dict = data[0]
-            search_end_date = data_dict.get("end_date")
-            if search_end_date:
-                doc_end_date = doc_data.get("end_date")
-                doc_year = doc_end_date.date().year
-                doc_month = doc_end_date.date().month
-                search_year = doc_end_date.date().year
-                search_month = doc_end_date.date().month
-                if (search_year == doc_year) and (search_month == doc_month):
-                    return data_dict.get("_id")
+            if data:
+                data_dict = data[0]
+                search_end_date = data_dict.get("end_date")
+                if search_end_date:
+                    doc_end_date = doc_data.get("end_date")
+                    doc_year = doc_end_date.date().year
+                    doc_month = doc_end_date.date().month
+                    search_year = doc_end_date.date().year
+                    search_month = doc_end_date.date().month
+                    if (search_year == doc_year) and (search_month == doc_month):
+                        return data_dict.get("_id")
 
         return None
 
