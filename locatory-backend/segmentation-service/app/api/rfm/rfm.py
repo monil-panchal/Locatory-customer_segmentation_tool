@@ -96,7 +96,6 @@ class RFM():
         rfmd_df['Avg_M'] = rfmd_df['M']/rfmd_df['Duration_Days']
         rfmd_df['Avg_F'] = rfmd_df['F']/rfmd_df['Duration_Days']
 
-        # TODO: Check datatype of Avg cols
         rfmd_df = rfmd_df.round({'Avg_F': 3, 'Avg_M': 2})
 
         return rfmd_df
