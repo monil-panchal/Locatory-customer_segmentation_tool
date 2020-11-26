@@ -60,6 +60,9 @@ select_age_range_div = html.Div([
                     dcc.RangeSlider(
                         id='age-range-slider',
                         step=1,
+                        vertical=True,
+                        verticalHeight=210
+
                     ),
                     html.Div(id='output-container-range-slider-age', style={'textAlign': 'center'})
                     ])
@@ -68,7 +71,9 @@ select_income_range_div = html.Div([
                     html.H6('Select Income Range'),
                     dcc.RangeSlider(
                         id='income-range-slider',
-                            step = 100,
+                        step = 1000,
+                        vertical=True,
+                        verticalHeight=210
                     ),
                     html.Div(id='output-container-range-slider-income', style={'textAlign': 'center'})
                     ])
@@ -76,38 +81,86 @@ select_income_range_div = html.Div([
 layout = dbc.Container([
             html.H2('Map Dashboard'),
             html.Hr(),
-            dbc.Row([
-                    dbc.Col(
+        html.Div([
+            dbc.Button('Filter Options', color='primary', block=True, id="demographic_filter_button"),
+            html.Div([
+
+                    dbc.Row(
                         select_country_div,
-                     width="2"),
-                    dbc.Col(
+                     ),
+                    dbc.Row(
                         select_state_div
-                        ,width="10"
+                        ,
                     ),
-                ]),
-            dbc.Row([
-                    dbc.Col(
+                    html.Br(),
+                    dbc.Row(
                         select_city_div,
-                    width="10"),
-                    dbc.Col(
+                   ),
+                    dbc.Row(
                         select_gender_div,
-                     width="2"),
-            ]),
-            html.Br(),
-            dbc.Row([
-                dbc.Col(
-                    select_age_range_div,
-                    width="6"),
-                dbc.Col(
-                    select_income_range_div,
-                width="6"),
-            ]),
+                     ),
+                    html.Br(),
+                    dbc.Row([
+                        dbc.Col(select_age_range_div, width="6"),
+                        dbc.Col(select_income_range_div, width="6"),
+                        ]
+                        ),
+                    # html.Br(),
+                    # dbc.Row(
+                    #     select_income_range_div,
+                    # )
+
+            ], style={
+                'position': 'fixed',
+                'zIndex': 2147483647,
+                'top': '210px',
+                'left': '100px',
+                'margin': 0,
+                'padding': 0,
+                'width': '400px',
+                'height': '200px',
+                'display': 'block',
+        }, id='demographic_navi'),
+        ], style={
+            'position': 'absolute',
+            'zIndex': 35,
+            'top': '140px',
+            'left': '100px',
+            'margin': 0,
+            'padding': 0,
+            'width': '100px',
+            'height': '100px'}, id="demographic_filters_div"
+        ),
             # map
             html.Div([
                 dcc.Graph(id='graph', config={'displayModeBar': False, 'scrollZoom': True},
-                          style={'padding-bottom': '2px', 'height': '100vh'})
-            ])
+                          # style={'padding-bottom': '2px', 'height': '100vh'},
+                          style={'width': '120vw', 'height': '115vh'}
+                          )
+            ],style={'zIndex': 1, 'position': 'absolute', 'top': '0', 'left': '0', 'marginLeft': '-80px',
+              'marginTop': '-8px'})
         ], className="mt-4")
+
+
+@app.callback(
+    [Output(component_id='country_checkbox', component_property='style'),
+     Output(component_id='gender_checkbox', component_property='style'),
+     Output(component_id='state_dropdown', component_property='style'),
+     Output(component_id='city_dropdown', component_property='style'),
+     Output(component_id='age-range-slider', component_property='style'),
+     Output(component_id='income-range-slider', component_property='style')
+     ],
+    [Input(component_id='demographic_filter_button', component_property='n_clicks')])
+def show_hide_demographic_filters_element(click_value):
+    # On-load
+    if click_value is None:
+        return [{'display': 'none'}, {'display': 'none'}, {'display': 'none'}, {'display': 'none'}, {'display': 'none'}, {'display': 'none'}]
+    # Show drop-down on even number of clicks
+    elif (click_value % 2) == 0:
+        return [{'display': 'none'}, {'display': 'none'}, {'display': 'none'}, {'display': 'none'}, {'display': 'none'}, {'display': 'none'}]
+    # Show drop-down on odd number of clicks
+    else:
+        return [{'display': 'block'}, {'display': 'block'}, {'display': 'block'}, {'display': 'block'}, {'display': 'block'}, {'display': 'block'}]
 
 @app.callback(
     Output('output-container-range-slider-age', 'children'),
