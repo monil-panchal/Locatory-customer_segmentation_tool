@@ -7,6 +7,7 @@ from apps.rfm.rfm import RFMData
 from dash.dependencies import Output, Input, State
 import plotly.graph_objects as go
 from app import app
+import numpy as np
 import random
 
 # dbc.Container([
@@ -14,7 +15,12 @@ import random
 # # html.H2('Default RFM dashboard'),
 # html.Hr(),
 
+# Define RFM object:
+dummy_obj = "5fbde042fd6d20542b9edbd5"
+
 layout = html.Div([
+
+    html.H2('RFM '),
 
     html.Div([
 
@@ -50,12 +56,7 @@ layout = html.Div([
             # ),
             # dbc.Col(
             html.Label(["Select F value",
-                        dcc.Dropdown(id="dropdown3", value=0,
-                                     options=[{"label": "value: 1", "value": 1},
-                                              {"label": "value: 2", "value": 2},
-                                              {"label": "value: 3", "value": 3},
-                                              {"label": "value: 4", "value": 4},
-                                              {"label": "value: 5", "value": 5}], multi=True
+                        dcc.Dropdown(id="dropdown3", value=0, multi=True
                                      # , style={'color': 'blue', 'backgroundColor': 'blue'}
                                      ),
                         ],
@@ -64,12 +65,7 @@ layout = html.Div([
             # ),
 
             html.Label(["Select M value",
-                        dcc.Dropdown(id="dropdown4", value=0,
-                                     options=[{"label": "value: 1", "value": 1},
-                                              {"label": "value: 2", "value": 2},
-                                              {"label": "value: 3", "value": 3},
-                                              {"label": "value: 4", "value": 4},
-                                              {"label": "value: 5", "value": 5}], multi=True
+                        dcc.Dropdown(id="dropdown4", value=0, multi=True
                                      # , style={'color': 'blue', 'backgroundColor': 'blue'}
                                      ),
                         ],
@@ -81,7 +77,7 @@ layout = html.Div([
             'position': 'fixed',
             'zIndex': 2147483647,
             'top': '200px',
-            'left': '120px',
+            'left': '250px',
             'margin': 0,
             'padding': 0,
             'width': '120px',
@@ -93,7 +89,7 @@ layout = html.Div([
         'position': 'absolute',
         'zIndex': 35,
         'top': '140px',
-        'left': '120px',
+        'left': '250px',
         'margin': 0,
         'padding': 0,
         'width': '100px',
@@ -132,15 +128,12 @@ def show_hide_element(click_value):
         return [{'display': 'block'}, {'display': 'block'}, {'display': 'block'}, {'display': 'block'}]
 
 
-@app.callback(
-    Output(component_id='slider-container', component_property='style'),
-    [Input(component_id='dropdown', component_property='value')])
 @app.callback(Output('dropdown1', 'options'), [Input('url', 'href')])
 def set_dropdown(href):
     if href is not None:
         # Get list of end dates from MongoDB
         rfm = RFMData()
-        end_dates_iso = rfm.get_all_end_dates()
+        end_dates_iso = rfm.get_all_end_dates(dummy_obj)
         # print(end_dates_iso)
 
         # Parse the end dates iso to get month and year
@@ -151,10 +144,30 @@ def set_dropdown(href):
         # Printing month-year format
         # print(period_values)
 
-        # Set dropdown calues
+        # Set dropdown values
         dropdown_values = [dict(label=x, value=i) for i, x in enumerate(period_values)]
-        print(dropdown_values)
+        # print(dropdown_values)
         return dropdown_values
+
+
+# Set dropdown3 and dropdown4 based on segment_size of object_id
+@app.callback([Output('dropdown3', 'options'), Output('dropdown4', 'options')], [Input('url', 'href')])
+def set_fm_dropdown_values(href):
+    if href is not None:
+
+        rfm = RFMData()
+
+        # Get RFM model size:
+        segment_size = rfm.get_segment_size(dummy_obj)
+
+        dropdown_labels = []
+        for i in range(1, segment_size + 1):
+            value = "value: " + str(i)
+            dropdown_labels.append(value)
+
+        dropdown_values = [dict(label=x, value=i + 1) for i, x in enumerate(dropdown_labels)]
+
+        return dropdown_values, dropdown_values
 
 
 @app.callback(Output('graph1', 'figure'),
@@ -171,7 +184,7 @@ def update_fig(dropdown1, dropdown2, dropdown3, dropdown4, href):
         rfm = RFMData()
 
         # Should make a call in maps not here
-        rfm_model = pd.DataFrame(rfm.get_records())
+        rfm_model = pd.DataFrame(rfm.get_records(dummy_obj))
         # print(rfm_model)
         # print(rfm_model.loc[0]['segment_d'])
 
@@ -182,46 +195,20 @@ def update_fig(dropdown1, dropdown2, dropdown3, dropdown4, href):
         customer_df = pd.DataFrame(customer.get_customer_data())
 
         # rfm
-        segment_d_customer_id = rfm_model.loc[0]['segment_d']
 
         # Initialize labels as 1
-        customer_df["r"] = 1
-        customer_df["f"] = 1
-        customer_df["m"] = 1
-        customer_df["rfm"] = 1
+        customer_df["r"] = np.nan
+        customer_df["f"] = np.nan
+        customer_df["m"] = np.nan
+        customer_df["rfm"] = np.nan
 
-        # Randomly generating the score values TODO: Remove this and integrate with the actual RFM Model.
-        #  TODO:  Remove these below lines of code from 202 and flow is maintained from line 227 without any code
-        #   addition.
+        # Randomly generating the score values
         # print(dropdown1)
 
         # Retrieve that particular row
         rfm_model = rfm_model.iloc[[dropdown1]]
         rfm_model.reset_index(inplace=True)
         # print(rfm_model)
-        rfm_model.at[0, 'R_score1'] = customer_df[0:18973]["customer_id"].to_list()
-        rfm_model.at[0, 'R_score2'] = customer_df[18973:37946]["customer_id"].to_list()
-        rfm_model.at[0, 'R_score3'] = customer_df[37946:56919]["customer_id"].to_list()
-        rfm_model.at[0, 'R_score4'] = customer_df[56919:75894]["customer_id"].to_list()
-        rfm_model.at[0, 'R_score5'] = customer_df[75894:94866]["customer_id"].to_list()
-
-        rfm_model.at[0, 'F_score1'] = customer_df[0:18973]["customer_id"].to_list()
-        rfm_model.at[0, 'F_score2'] = customer_df[18973:37946]["customer_id"].to_list()
-        rfm_model.at[0, 'F_score3'] = customer_df[37946:56919]["customer_id"].to_list()
-        rfm_model.at[0, 'F_score4'] = customer_df[56919:75894]["customer_id"].to_list()
-        rfm_model.at[0, 'F_score5'] = customer_df[75894:94866]["customer_id"].to_list()
-
-        rfm_model.at[0, 'M_score1'] = customer_df[0:18973]["customer_id"].to_list()
-        rfm_model.at[0, 'M_score2'] = customer_df[18973:37946]["customer_id"].to_list()
-        rfm_model.at[0, 'M_score3'] = customer_df[37946:56919]["customer_id"].to_list()
-        rfm_model.at[0, 'M_score4'] = customer_df[56919:75894]["customer_id"].to_list()
-        rfm_model.at[0, 'M_score5'] = customer_df[75894:94866]["customer_id"].to_list()
-
-        rfm_model.at[0, 'segment_a'] = customer_df[0:18973]["customer_id"].to_list()
-        rfm_model.at[0, 'segment_b'] = customer_df[18973:37946]["customer_id"].to_list()
-        rfm_model.at[0, 'segment_c'] = customer_df[37946:56919]["customer_id"].to_list()
-        rfm_model.at[0, 'segment_d'] = customer_df[56919:75894]["customer_id"].to_list()
-        rfm_model.at[0, 'segment_e'] = customer_df[75894:94866]["customer_id"].to_list()
 
         # print(rfm_model)
         # print(rfm_model.columns)
@@ -235,43 +222,42 @@ def update_fig(dropdown1, dropdown2, dropdown3, dropdown4, href):
         customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['R_score4']), 'r'] = 4
         customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['R_score5']), 'r'] = 5
 
-        # Get list of customers with different F scores and Update f label
-        customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['F_score1']), 'f'] = 1
-        customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['F_score2']), 'f'] = 2
-        customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['F_score3']), 'f'] = 3
-        customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['F_score4']), 'f'] = 4
-        customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['F_score5']), 'f'] = 5
+        # Get list of customers with different F,M scores and Update f,m label
+        for i in range(rfm_model['segment_count'].item()):
+            j = i + 1
+            f_var_name = "F_score" + str(j)
+            customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0][f_var_name]), 'f'] = j
 
-        # Get list of customers with different M scores and Update m label
-        customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['M_score1']), 'm'] = 1
-        customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['M_score2']), 'm'] = 2
-        customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['M_score3']), 'm'] = 3
-        customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['M_score4']), 'm'] = 4
-        customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['M_score5']), 'm'] = 5
+            m_score_name = "M_score" + str(j)
+            customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0][m_score_name]), 'm'] = j
+
+        # print(rfm_model['segment_count'].item())
+
+        # print(customer_df)
 
         # Get list of different segmented customers and Update rfm label column
-        customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['segment_a']), 'rfm'] = 'a'
-        customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['segment_b']), 'rfm'] = 'b'
-        customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['segment_c']), 'rfm'] = 'c'
-        customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['segment_d']), 'rfm'] = 'd'
-        customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0]['segment_e']), 'rfm'] = 'e'
+        for i in range(rfm_model['segment_count'].item()):
+            val = "segment_" + chr(65 + i)
+            customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0][val]), 'rfm'] = chr(65 + i)
+
+        print(customer_df)
+        print(customer_df.columns)
+
+        # Remove customers with no label
+        customer_df = customer_df[customer_df['rfm'].notna()]
+        customer_df = customer_df.sort_values(by=["rfm"])
+        customer_df.reset_index(inplace=True)
 
         print(customer_df)
         print(customer_df.columns)
 
         # Define a list of colors
         # Index0 - Empty, Green - class A , Red - class B, Blue - class C, Orange - class D, Yellow - class E
-        color_val = {'a': 'green',
-                     'b': 'red',
-                     'c': 'blue',
-                     'd': 'orange',
-                     'e': 'yellow'}
-        # color_list = ["", "green", "red", "blue", "orange", "yellow"]
-        # final_color_values = []
-        # for item in customer_df["rfm"].tolist():
-        #     final_color_values.append(color_list[item])
-        #
-        # customer_df["rfm_color_values"] = final_color_values
+        color_val = {'A': 'green',
+                     'B': 'gray',
+                     'C': 'blue',
+                     'D': 'orange',
+                     'E': 'yellow', 'F': 'brown', 'G': 'pink', 'H': 'purple', 'I': 'teal', 'J': 'red'}
 
         if dropdown2 == 0 or dropdown2 is None or not dropdown2:
             current_df = customer_df
@@ -295,9 +281,10 @@ def update_fig(dropdown1, dropdown2, dropdown3, dropdown4, href):
         for lbl in current_df['rfm'].unique():
             # Different classes
             new_df = current_df.loc[current_df["rfm"] == lbl]
-            print('Length of new df is:')
-            print(len(new_df))
-            current_trace_name = "Class-" + lbl
+            # print('Length of new df is:')
+            # print(len(new_df))
+            # print(lbl)
+            current_trace_name = "Class-" + lbl + " " + str(len(new_df))
 
             locations.append(go.Scattermapbox(
                 lon=new_df['long'],
@@ -340,17 +327,14 @@ def update_fig(dropdown1, dropdown2, dropdown3, dropdown4, href):
                     x=0,
                     traceorder='normal',
                     font=dict(
-                        size=12, ),
+                        family="Courier",
+                        color="black",
+                        size=12),
+                    bgcolor="LightSteelBlue",
+                    bordercolor="Black",
+                    borderwidth=2,
+                    title_font_family="Times New Roman",
+
                 ),
-                # annotations=[
-                #     dict(
-                #         x=0,
-                #         y=0.75,
-                #         xref='paper',
-                #         yref='paper',
-                #         text='Segments',
-                #         showarrow=False
-                #     )
-                # ]
             )
         }
