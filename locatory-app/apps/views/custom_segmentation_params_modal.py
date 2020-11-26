@@ -109,15 +109,6 @@ class CustomSegmentationParamsModal:
         return [
             dbc.ModalHeader("Create segmentation params"),
             dbc.ModalBody([
-                html.Div([
-                    dbc.Toast(
-                        "",
-                        id="toast-message",
-                        header="",
-                        icon="primary",
-                        duration=3000,
-                    ),
-                ]),
                 html.Div(
                     [
                         dbc.Input(id="custom_params_title", placeholder="Enter title of custom params", type="text", maxLength=200),
@@ -160,8 +151,16 @@ class CustomSegmentationParamsModal:
                 CustomSegmentationParamsModal.get_select_state_div(),
                 CustomSegmentationParamsModal.get_select_city_div(),
 
-                CustomSegmentationParamsModal.get_select_segmentation_algorithm_div()
-
+                CustomSegmentationParamsModal.get_select_segmentation_algorithm_div(),
+                html.Div([
+                    dbc.Toast(
+                        "",
+                        id="toast-message",
+                        header="",
+                        icon="info",
+                        duration=4000,
+                    ),
+                ]),
             ]),
             dbc.ModalFooter(
                 dbc.Row([

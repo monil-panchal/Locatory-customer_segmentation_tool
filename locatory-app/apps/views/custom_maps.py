@@ -114,9 +114,12 @@ def toggle_modal(n1, create_button, is_open, *modal_component_states_args):
                 or custom_params_dict.get('input_segments')<3 or custom_params_dict.get('input_segments')>10:
             toast_message_header = "Validation Error"
             toast_message_content = "No of segments must be between 3 and 10"
-        if custom_params_dict.get('custom_params_title') is None:
+        if custom_params_dict.get('custom_params_title') is None or custom_params_dict.get('custom_params_title').strip() == '' or len(custom_params_dict.get('custom_params_title')) > 200:
             toast_message_header = "Validation Error"
-            toast_message_content = "Invalid title"
+            toast_message_content = "Title can not be empty or more than 200 char long."
+        elif csp.is_title_exist(custom_params_dict.get('custom_params_title')) is True:
+            toast_message_header = "Validation Error"
+            toast_message_content = f"Title '{custom_params_dict.get('custom_params_title')}' already exist."
 
         if toast_message_header != '':
             print(toast_message_content)
@@ -186,7 +189,6 @@ def update_state_modal_dropdown(value):
     customer_df = pd.DataFrame(customer.get_customer_data())
     df = customer_df.loc[customer_df['customer_country'].isin(value)]
     states = sorted(df['customer_state'].unique())
-    # print(states)
     return [
         {'label': f"{brazil_state_code_map[key]}", 'value': key} for key in states
     ]
@@ -199,9 +201,7 @@ def update_city_modal_dropdown(value):
     print(f"modal_options",value)
     customer = Customer()
     customer_df = pd.DataFrame(customer.get_customer_data())
-    # print(customer_df[:3])
     unique_cities = customer_df.loc[customer_df['customer_state'].isin(value)]['customer_city'].unique()
-    # print(unique_cities)
     return [
         {'label': f"{key}", 'value': key} for key in unique_cities
     ]
@@ -210,11 +210,8 @@ def update_city_modal_dropdown(value):
               [Input('url', 'href'), Input("open", "n_clicks"), Input("close", "n_clicks")],
               [State("modal", "is_open")])
 def display_custom_param_list_page(href, open, close, is_open):
-    # print("card_href "+href, is_open)
     print('in close',href, open, close, is_open)
     cards_list = []
-    # if modal_children is None:
-    #     modal_children = CustomSegmentationParamsModal.get_modal_elements()
     if is_open is None and href is not None and 'custom_maps_list' == href.split('/')[-1]:
         cards_list = create_custom_params_card_list()
 
@@ -226,19 +223,6 @@ def display_custom_param_list_page(href, open, close, is_open):
 
 
     return cards_list, is_open
-
-# @app.callback(
-#     Output("modal", "is_open"),
-#     [Input("open", "n_clicks"), Input("close", "n_clicks")],
-#     [State("modal", "is_open")],
-# )
-# def close_modal(open, close, is_open):
-#     print('in close', open, close, is_open)
-#     if is_open is True and close is not None:
-#         is_open = False
-#     elif (is_open is False or is_open is None) and open is not None:
-#         is_open = True
-#     return is_open
 
 def create_custom_params_card_list():
     cards_list = []
@@ -327,7 +311,7 @@ def create_custom_params_card_list():
     return cards_list
 
 # define callbacks for card accordions with ids collapse-{i}
-print("SegmentationParameters().total_count()+", SegmentationParameters().total_count())
+# print("total", SegmentationParameters().total_count())
 for index in range(1, SegmentationParameters().total_count()+1000):
     print("index", index)
     @app.callback(
