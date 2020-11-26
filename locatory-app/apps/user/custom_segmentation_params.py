@@ -79,3 +79,11 @@ class SegmentationParameters():
         print(insert_dict)
         return True
 
+    def is_title_exist(self, title):
+        pymongoObj = PyMongo()
+        db = pymongoObj.get_db_connection()
+        count = db.SegmentationParameters.count({ "title": f"{title.strip()}" })
+        if count>0:
+            return True
+        pymongoObj.close_db_connection()
+        return False
