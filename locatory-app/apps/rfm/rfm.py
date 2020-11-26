@@ -46,13 +46,16 @@ class RFMData:
             # print("Segments are:")
             # print(segments)
 
+            # print("R-scores::")
+            keys_list = list(r_scores.keys())
+
             # Store length of segments:
             len_val = item['segment_count']
 
             # R values
-            for i in range(5):
-                r_var = "R_score" + str(i + 1)
-                globals()[r_var] = r_scores.pop(str(i + 1), {})
+            for values in list(r_scores.keys()):
+                r_var = "R_score" + values
+                globals()[r_var] = r_scores.pop(values, {})
 
             # F, M values
             for i in range(len_val):
@@ -78,9 +81,14 @@ class RFMData:
             my_items.update(f_scores)
             my_items.update(m_scores)
 
+            # print(list(r_scores.keys()))
+            # Append keys to r_keys
+            # print(list(r_scores.keys()))
+            my_items["r_keys"] = keys_list
+
             # Get R score-wise customer ids
-            for i in range(5):
-                r_var_name = "R_score" + str(i + 1)
+            for values in keys_list:
+                r_var_name = "R_score" + values
                 my_items[r_var_name] = globals()[r_var_name]['customer_ids']
 
             # Get F, M score-wise customer ids
@@ -91,10 +99,13 @@ class RFMData:
                 m_score_name = "M_score" + str(i + 1)
                 my_items[m_score_name] = globals()[m_score_name]['customer_ids']
 
+            # print('Length of segments is:', len_val)
             # Get RFM segment-wise customer ids
             for i in range(len_val):
                 val = "segment_" + chr(65 + i)
                 my_items[val] = globals()[val]['customer_ids']
+
+            # print(my_items["r_keys"])
 
             self.rfm.append(my_items)
         return self.rfm
