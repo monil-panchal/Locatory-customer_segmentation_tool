@@ -7,69 +7,100 @@ class RFMData:
         self.end_dates = []
         self.rfm = []
 
-    def get_all_end_dates(self):
-        print('Calling end dates')
-        print(self.db.Rfmsample.distinct('end_date'))
+    def get_all_end_dates(self, object_value):
+        print('Get all end dates of a particular segmentation id:')
+        # print(self.db.RFMSegments.find({'segmentation_parameters_id': object_value}, {'end_date': 1}))
         # Get end dates and return a list of all end dates
-        return self.db.Rfmsample.distinct('end_date')
+        cursor = self.db.RFMSegments.find({'segmentation_parameters_id': object_value}, {'end_date': 1})
+        end_dates = []
+        for item in cursor:
+            # print('Matched items')
+            # print(item)
+            end_dates.append(item['end_date'])
+        return end_dates
 
-    def get_records(self):
+        # return self.db.RFMSegments.find({'segmentation_parameters_id': object_value}, {'end_date': 1})
+
+    def get_records(self, object_value):
         print('Calling get records')
-        cursor = self.db.Rfmsample.find({},
-                                  {'R': 1, 'F': 1, 'M': 1, '_id': 0, 'organization_id': 1, 'start_date': 1,
-                                   'end_date': 1, 'RFM': 1})
+        # print(type(object_value))
+        cursor = self.db.RFMSegments.find({'segmentation_parameters_id': object_value})
+        # , 'F': 1, 'M': 1, 'organization_id': 1, 'start_date': 1, 'end_date': 1, 'RFM': 1, 'segment_count': 1})
         for item in cursor:
             my_items = {}
+            # print('----printing items----')
+            # print(item)
 
             # Retrieve r,f,m objects
             r_values = item.pop('R', {})
             f_values = item.pop('F', {})
             m_values = item.pop('M', {})
             rfm_values = item.pop('RFM', {})
+            # print('----Values----')
+            # print(rfm_values)
+            # print(r_values)
+            r_scores = r_values.pop('score', {})
+            f_scores = f_values.pop('score', {})
+            m_scores = m_values.pop('score', {})
             segments = rfm_values.pop('segments', {})
-            segment_a = segments.pop('A', {})
-            segment_b = segments.pop('B', {})
-            segment_c = segments.pop('C', {})
-            segment_d = segments.pop('D', {})
-            segment_e = segments.pop('E', {})
+            # print("Segments are:")
+            # print(segments)
+
+            # Store length of segments:
+            len_val = item['segment_count']
+
+            # R values
+            for i in range(5):
+                r_var = "R_score" + str(i + 1)
+                globals()[r_var] = r_scores.pop(str(i + 1), {})
+
+            # F, M values
+            for i in range(len_val):
+                f_var = "F_score" + str(i + 1)
+                globals()[f_var] = f_scores.pop(str(i + 1), {})
+                m_var = "M_score" + str(i + 1)
+                globals()[m_var] = m_scores.pop(str(i + 1), {})
+
+            # RFM values
+            # Check if segments exist
+            for i in range(len_val):
+                # Map number to segment letter
+                val = "segment_" + chr(65 + i)
+                globals()[val] = segments.pop(chr(65 + i), {})
 
             my_items.update(item)
             my_items.update(rfm_values)
+            my_items.update(r_values)
+            my_items.update(f_values)
+            my_items.update(m_values)
             my_items.update(segments)
+            my_items.update(r_scores)
+            my_items.update(f_scores)
+            my_items.update(m_scores)
 
-            # Get individual customer id's of a particular score - R
-            my_items["R_score1"] = r_values['score'][1].pop('customer_ids', {})
-            my_items["R_score2"] = r_values['score'][2].pop('customer_ids', {})
-            my_items["R_score3"] = r_values['score'][3].pop('customer_ids', {})
-            my_items["R_score4"] = r_values['score'][4].pop('customer_ids', {})
-            my_items["R_score5"] = r_values['score'][5].pop('customer_ids', {})
+            # Get R score-wise customer ids
+            for i in range(5):
+                r_var_name = "R_score" + str(i + 1)
+                my_items[r_var_name] = globals()[r_var_name]['customer_ids']
 
-            # Get individual customer id's of a particular score - F
-            my_items["F_score1"] = f_values['score'][1].pop('customer_ids', {})
-            my_items["F_score2"] = f_values['score'][2].pop('customer_ids', {})
-            my_items["F_score3"] = f_values['score'][3].pop('customer_ids', {})
-            my_items["F_score4"] = f_values['score'][4].pop('customer_ids', {})
-            my_items["F_score5"] = f_values['score'][5].pop('customer_ids', {})
+            # Get F, M score-wise customer ids
+            for i in range(len_val):
+                f_var_name = "F_score" + str(i + 1)
+                my_items[f_var_name] = globals()[f_var_name]['customer_ids']
 
-            # Get individual customer id's of a particular score - M
-            my_items["M_score1"] = m_values['score'][1].pop('customer_ids', {})
-            my_items["M_score2"] = m_values['score'][2].pop('customer_ids', {})
-            my_items["M_score3"] = m_values['score'][3].pop('customer_ids', {})
-            my_items["M_score4"] = m_values['score'][4].pop('customer_ids', {})
-            my_items["M_score5"] = m_values['score'][5].pop('customer_ids', {})
+                m_score_name = "M_score" + str(i + 1)
+                my_items[m_score_name] = globals()[m_score_name]['customer_ids']
 
             # Get RFM segment-wise customer ids
-            my_items["segment_a"] = segment_a['customer_ids']
-            my_items["segment_b"] = segment_b['customer_ids']
-            my_items["segment_c"] = segment_c['customer_ids']
-            my_items["segment_d"] = segment_d['customer_ids']
-            my_items["segment_e"] = segment_e['customer_ids']
+            for i in range(len_val):
+                val = "segment_" + chr(65 + i)
+                my_items[val] = globals()[val]['customer_ids']
 
             self.rfm.append(my_items)
         return self.rfm
 
-
-
-
-
-
+    def get_segment_size(self, object_value):
+        cursor = self.db.RFMSegments.find({'segmentation_parameters_id': object_value}, {'segment_count': 1})
+        for item in cursor:
+            # Return the segment size
+            return item["segment_count"]
