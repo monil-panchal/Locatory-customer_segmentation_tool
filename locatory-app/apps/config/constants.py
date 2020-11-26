@@ -28,4 +28,21 @@ brazil_state_code_map = {
 'TO':'Tocantins',
 }
 
+# TODO
+# load secrets from env
+
 mapbox_access_token = 'pk.eyJ1IjoiYWhzLXZhIiwiYSI6ImNraGsyMWVmdDByOWszNnNkdzJqcHpwOWMifQ.llITOAaVvDUflVgenIPPlw'
+
+CURRENT_ENV = 'dev'
+RFM_API_CREDENTIALS = {
+    "dev": {
+            "username": "envisageinsights",
+            "password": "EIsegmentation@2020#4",
+            "host": "http://127.0.0.1:8000/"
+        },
+    "prod": {
+            "username": "envisageinsights",
+            "password": "EIsegmentation@2020#4",
+            "host": "http://127.0.0.1:8000/"
+        }
+}
