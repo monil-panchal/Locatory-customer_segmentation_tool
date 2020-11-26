@@ -181,12 +181,45 @@ class RFMDatabase:
 
         return data
 
+    def overwrite_required(self, doc_data):
+        data = self._db['RFMSegments'].find(
+            {"segmentation_parameters_id": doc_data.get("segmentation_parameters_id")}).sort(
+                [("end_date", -1)]).limit(1)
+
+        if data:
+            data = list(data)
+            data_dict = data[0]
+            search_end_date = data_dict.get("end_date")
+            if search_end_date:
+                doc_end_date = doc_data.get("end_date")
+                doc_year = doc_end_date.date().year
+                doc_month = doc_end_date.date().month
+                search_year = doc_end_date.date().year
+                search_month = doc_end_date.date().month
+                if (search_year == doc_year) and (search_month == doc_month):
+                    return data_dict.get("_id")
+
+        return None
+
+    def overwrite_document(self, existing_doc_id, doc_data, collection):
+        filter = {"_id": ObjectId(existing_doc_id)}
+        replaced_doc = collection.replace_one(filter, doc_data)
+
+        if replaced_doc.upserted_id:
+            return replaced_doc.upserted_id
+
+        return existing_doc_id
+
     def save_rfm_segments_data(self, rfm_df, document_id, rfm_parameters, start_date, end_date):
         doc_data = self.data_for_rfmsegments_collection(
             rfm_df, document_id, rfm_parameters, start_date, end_date)
 
-        # TODO: Oerwrite based on month
-        document_id = self.insert_one_document(
-            doc_data, self._db["RFMSegments"])
+        existing_doc_id = self.overwrite_required(doc_data)
+        if not existing_doc_id:
+            document_id = self.insert_one_document(
+                doc_data, self._db["RFMSegments"])
+        else:
+            document_id = self.overwrite_document(
+                existing_doc_id, doc_data, self._db["RFMSegments"])
 
         return document_id
