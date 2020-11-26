@@ -152,6 +152,24 @@ class RFMDatabase:
 
         return label_data
 
+    def get_valid_RFM_labels(self, data):
+        """
+        Compare RFM Labels with n_segments.
+        Add labels with empty list if number of
+        unique labels are less than n_segments.
+        """
+        # Max 10 labels because n_segments falls between 3 and 10
+        possible_labels = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
+        possible_labels = possible_labels[:data.get("segment_count")]
+
+        cur_rfm_labels = list(data.get("RFM").get("segments").keys())
+        labels_to_add = set(possible_labels) - set(cur_rfm_labels)
+
+        for label in sorted(list(labels_to_add)):
+            data["RFM"]["segments"][label] = {"customer_ids": []}
+
+        return data
+
     def add_rfm_data_for_rfmsegments_collection(self, data, rfm_df):
         data["R"] = self.get_label_wise_customer_ids_list(
             rfm_df, "R_Score", "_id", "score")
@@ -161,6 +179,8 @@ class RFMDatabase:
             rfm_df, "Avg_M_Score", "_id", "score")
         data["RFM"] = self.get_label_wise_customer_ids_list(
             rfm_df, "RFM_Label", "_id", "segments")
+
+        data = self.get_valid_RFM_labels(data)
 
         return data
 
