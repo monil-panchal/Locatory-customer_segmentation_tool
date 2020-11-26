@@ -12,14 +12,6 @@ import urllib.parse as urlparse
 from urllib.parse import parse_qs
 from apps.config.constants import brazil_state_code_map
 
-# dbc.Container([
-#
-# # html.H2('Default RFM dashboard'),
-# html.Hr(),
-
-# Define RFM object:
-dummy_obj = "5fbde042fd6d20542b9edbd5"
-
 layout = html.Div([
 
     html.H2('RFM '),
@@ -172,7 +164,7 @@ def set_dropdown(href):
         # Check if no params are passed
         if len(parse_qs(parsed.query)) == 0:
             # Assign default parameters object
-            object_id = dummy_obj
+            object_id = "5fbe90c4003b52fdc9b8382d"
         else:
             object_id = parse_qs(parsed.query)['id'][0]
 
@@ -232,7 +224,7 @@ def set_fm_dropdown_values(href):
         # Check if no params are passed
         if len(parse_qs(parsed.query)) == 0:
             # Assign default parameters object
-            object_id = dummy_obj
+            object_id = "5fbe90c4003b52fdc9b8382d"
         else:
             object_id = parse_qs(parsed.query)['id'][0]
 
@@ -267,7 +259,7 @@ def update_fig(dropdown1, dropdown2, dropdown3, dropdown4, dropdown_state, href)
         # Check if no params are passed
         if len(parse_qs(parsed.query)) == 0:
             # Assign default parameters object
-            object_id = dummy_obj
+            object_id = "5fbe90c4003b52fdc9b8382d"
         else:
             object_id = parse_qs(parsed.query)['id'][0]
 
@@ -457,7 +449,7 @@ def update_state_dropdown(dropdown1, dropdown2, dropdown3, dropdown4, href):
         # Check if no params are passed
         if len(parse_qs(parsed.query)) == 0:
             # Assign default parameters object
-            object_id = dummy_obj
+            object_id = "5fbe90c4003b52fdc9b8382d"
         else:
             object_id = parse_qs(parsed.query)['id'][0]
 
