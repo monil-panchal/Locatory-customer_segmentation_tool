@@ -1,6 +1,7 @@
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
+from dash import callback_context
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
@@ -288,17 +289,19 @@ def create_custom_params_card_list():
                     className="card-text",
                 ))
 
-        card_body.append(dbc.Button("View", color="primary"))
+        # card_body.append(dbc.Button("View", id=f"view-btn", color="primary"))
+        card_body.append(dcc.Link('View', href=f"/other_dashboard?id={str(params['_id'])}"))
         cards_list.append(dbc.Card(
             [
-                dbc.CardHeader(
+                dbc.CardHeader([
                     html.H2(
                         dbc.Button(
-                            f"{params.get('title', f'Custom map params #{index + 1}')}",
+                            f"{params.get('title')}",
                             color="link",
                             id=f"group-{index + 1}-toggle",
-                        )
-                    )
+                        ),
+                    ),
+                    html.Div(id='container-button-timestamp')],
                 ),
                 dbc.Collapse(
                     dbc.CardBody(card_body),
@@ -309,9 +312,12 @@ def create_custom_params_card_list():
         ))
     return cards_list
 
+total_accordians = SegmentationParameters().total_count()
+
 # define callbacks for card accordions with ids collapse-{i}
 # print("total", SegmentationParameters().total_count())
-for index in range(1, SegmentationParameters().total_count()+1000):
+for index in range(1, total_accordians+1000):
+
     @app.callback(
         Output(f"collapse-{index}", "is_open"),
         [Input(f"group-{index}-toggle", "n_clicks")],

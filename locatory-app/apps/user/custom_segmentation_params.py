@@ -13,7 +13,7 @@ class SegmentationParameters():
         pymongoObj = PyMongo()
         db = pymongoObj.get_db_connection()
         custom_params = []
-        cursor = db.SegmentationParameters.find({}, {'_id':0})
+        cursor = db.SegmentationParameters.find({})
         for item in cursor:
             custom_params.append(item)
         pymongoObj.close_db_connection()
