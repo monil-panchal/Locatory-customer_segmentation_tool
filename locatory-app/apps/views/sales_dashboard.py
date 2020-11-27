@@ -162,6 +162,7 @@ card_dashboard_stat = dbc.CardDeck(
             dbc.CardBody(
                 [
                     html.H5("Highest order value", className="card-title"),
+                    html.Br(),
                     html.H4(id='highest_order_value',
                             className="text-success", )
                 ]
@@ -180,6 +181,7 @@ card_dashboard_stat = dbc.CardDeck(
             dbc.CardBody(
                 [
                     html.H5("Average order value", className="card-title"),
+                    html.Br(),
                     html.H4(id='average_order_value', className="text-warning")
                 ]
             ), color="warning", outline=True
