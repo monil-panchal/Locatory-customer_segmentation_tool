@@ -301,6 +301,8 @@ card_sales_dashboard = [
 ]
 
 layout = html.Div([
+    html.Div(id='output', hidden=True),
+    html.Div(id='sales_dashboard', hidden=True),
     html.H2('Sales Dashboards'),
     html.Hr(),
     dbc.Row([
@@ -309,8 +311,9 @@ layout = html.Div([
                 dbc.Card(card_content_1, ),
                 dbc.Card(card_content_2, ),
 
-            ], id='menu', style={'position': 'sticky', 'top': '0'}),
-        ], width=2),
+            ], id='menu', style={'position': 'sticky', 'top': '2rem'}),
+        ], width='2'),
+
 
         dbc.Col([
             dbc.Row([
@@ -344,13 +347,8 @@ layout = html.Div([
                     ], id='graph_map')
                 ]),
             ])
-        ])
-
-    ]),
-
-    html.Div(id='output', hidden=True),
-    html.Div(id='sales_dashboard', hidden=True)
-
+        ], width='10')
+    ])
 ])
 
 
