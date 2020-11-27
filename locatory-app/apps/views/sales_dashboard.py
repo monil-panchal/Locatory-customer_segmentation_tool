@@ -37,7 +37,8 @@ def process_current_dashboard_data(filter_data_options: dict, sales_dashboard_df
             else:
                 current_df = sales_dashboard_df[
                     (sales_dashboard_df['order_date'].dt.year == filter_data_options.get('year'))]
-            previous_df = sales_dashboard_df[~sales_dashboard_df.isin(current_df)].dropna(how='all')
+            previous_df = sales_dashboard_df[~sales_dashboard_df.isin(
+                current_df)].dropna(how='all')
 
         current_df = current_df.reset_index(drop=True)
         previous_df = previous_df.reset_index(drop=True)
@@ -98,7 +99,8 @@ def calculate_previous_timeline_data(data: dict):
         prev_month = data['month'] - 1
 
         if prev_month in time_line[current_year]:
-            print(f'prev month: {prev_month} is in current year: {current_year} range')
+            print(
+                f'prev month: {prev_month} is in current year: {current_year} range')
             data['prev_month'] = prev_month
 
         else:
@@ -109,10 +111,12 @@ def calculate_previous_timeline_data(data: dict):
             data['prev_year'] = prev_year
             data['prev_month'] = prev_month
 
-            print(f'latest previous month is: {prev_month} of the year: {prev_year}')
+            print(
+                f'latest previous month is: {prev_month} of the year: {prev_year}')
 
     else:
-        print(f'No month is selected in the filter. Fetching data of the previous year: {prev_year}')
+        print(
+            f'No month is selected in the filter. Fetching data of the previous year: {prev_year}')
         data['prev_year'] = prev_year
 
     return data
@@ -158,7 +162,8 @@ card_dashboard_stat = dbc.CardDeck(
             dbc.CardBody(
                 [
                     html.H5("Highest order value", className="card-title"),
-                    html.H4(id='highest_order_value', className="text-success", )
+                    html.H4(id='highest_order_value',
+                            className="text-success", )
                 ]
             ), color="success", outline=True
         ),
@@ -285,7 +290,8 @@ card_content_2 = [
                     id='city-selector',
                 )
             ]),
-            html.Button('View Dashboard', id='view_dashboard', n_clicks=0, className='btn btn-primary'),
+            html.Button('View Dashboard', id='view_dashboard',
+                        n_clicks=0, className='btn btn-primary'),
         ]
     )
 ]
@@ -311,7 +317,7 @@ layout = html.Div([
                 dbc.Card(card_content_1, ),
                 dbc.Card(card_content_2, ),
 
-            ], id='menu', style={'position': 'sticky', 'top': '2rem'}),
+            ], id='menu', style={'position': 'sticky', 'top': '0'}),
         ], width='2'),
 
 
@@ -474,8 +480,10 @@ def submit_dashboard_request(n_clicks, year, month, country, state, city):
                     bar_graph_type = 'month'
                 else:
                     bar_graph_type = 'year'
-                bar_graph_by_orders = generate_bar_graph_by_orders(current_df, previous_df, bar_graph_type)
-                bar_graph_by_sales = generate_bar_graph_by_sales(current_df, previous_df, bar_graph_type)
+                bar_graph_by_orders = generate_bar_graph_by_orders(
+                    current_df, previous_df, bar_graph_type)
+                bar_graph_by_sales = generate_bar_graph_by_sales(
+                    current_df, previous_df, bar_graph_type)
 
                 if data.get('state', None) is None:
                     pie_chart_type = 'country'
@@ -484,23 +492,25 @@ def submit_dashboard_request(n_clicks, year, month, country, state, city):
                 if not data.get('city') is None:
                     pie_chart_type = 'city'
 
-                pie_chart_by_location = generate_pie_chart_by_location(current_df, pie_chart_type)
-                pie_chart_by_item_category = generate_pie_chart_by_product_category(current_df)
+                pie_chart_by_location = generate_pie_chart_by_location(
+                    current_df, pie_chart_type)
+                pie_chart_by_item_category = generate_pie_chart_by_product_category(
+                    current_df)
 
                 map_sales = generate_density_map(current_df)
             else:
                 bar_graph_by_sales, \
-                bar_graph_by_orders, \
-                pie_chart_by_location, \
-                pie_chart_by_item_category, \
-                map_sales = {}, {}, {}, {}, {}
+                    bar_graph_by_orders, \
+                    pie_chart_by_location, \
+                    pie_chart_by_item_category, \
+                    map_sales = {}, {}, {}, {}, {}
 
             return None, dashboard_data_stat.get('total_orders', 0), \
-                   "$ " + str(dashboard_data_stat.get('total_sales', 0.0)), \
-                   "$ " + str(dashboard_data_stat.get('highest_order_value', 0.0)), \
-                   "$ " + str(dashboard_data_stat.get('lowest_order_value', 0.0)), \
-                   "$ " + str(dashboard_data_stat.get('average_order_value', 0.0)), \
-                   bar_graph_by_orders, \
-                   bar_graph_by_sales, pie_chart_by_location, pie_chart_by_item_category, map_sales
+                "$ " + str(dashboard_data_stat.get('total_sales', 0.0)), \
+                "$ " + str(dashboard_data_stat.get('highest_order_value', 0.0)), \
+                "$ " + str(dashboard_data_stat.get('lowest_order_value', 0.0)), \
+                "$ " + str(dashboard_data_stat.get('average_order_value', 0.0)), \
+                bar_graph_by_orders, \
+                bar_graph_by_sales, pie_chart_by_location, pie_chart_by_item_category, map_sales
     else:
         return None, None, None, None, None, None, {}, {}, {}, {}, {}

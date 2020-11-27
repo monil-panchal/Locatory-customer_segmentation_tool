@@ -77,15 +77,15 @@ def navBar(input1):
     if current_user.is_authenticated:
         navBarContents = [
             dbc.NavLink(html.Img(src='/assets/locatory-logo-removebg-preview.png',
-                                             style={"height": 60, "width": 250}), href='/sales_dashboard'),
+                                 style={"height": 60, "width": 300}), href='/sales_dashboard'),
             dbc.NavLink('Sales Dashboard',
-                                    href='/sales_dashboard', style={"color": "orange"}),
+                        href='/sales_dashboard', style={"color": "orange"}),
             dbc.NavLink('Demographic-Geographic Segmentation',
-                                    href='/map_dashboard', style={"color": "orange"}),
+                        href='/map_dashboard', style={"color": "orange"}),
             dbc.NavLink('Default Combined Segmentation',
-                                    href='/other_dashboard', style={"color": "orange"}),
+                        href='/other_dashboard', style={"color": "orange"}),
             dbc.NavLink('Custom Combined Segmentation',
-                                    href='/custom_maps_list', style={"color": "orange"}),
+                        href='/custom_maps_list', style={"color": "orange"}),
             dbc.DropdownMenu(
                 in_navbar=True,
                 label=current_user.get_id(),
