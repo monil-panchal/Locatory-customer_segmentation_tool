@@ -13,12 +13,69 @@ from urllib.parse import parse_qs
 from apps.config.constants import brazil_state_code_map
 
 layout = html.Div([
+    html.Div([
+        dbc.Button('Demographic Filters', color='primary', block=True, id="demo_button"),
+        html.Div([
+            html.Label(["Select State",
+                        dcc.Dropdown(
+                            id="dropdown_state",
+                            options=[
+                            ],
+                            value=[],
+                            multi=True,
+                        ),
+                        ],
+                       style={'height': '100%', 'width': '120%', 'display': 'none'}, id="dropdown5_component"
+                       ),
+            html.Label(["Select City",
+                        dcc.Dropdown(
+                            id="dropdown_city",
+                            options=[
+                            ],
+                            value=[],
+                            multi=True,
+                        ),
+                        ],
+                       style={'height': '100%', 'width': '120%', 'display': 'none'}, id="dropdown_city_component"
+                       ),
+            html.Label(["Select Gender",
+                        dcc.Checklist(
+                            id="checkbox_gender",
+                            options=[
 
-    html.H2('RFM '),
+                            ],
+                            value=[],
+                            labelStyle={'display': 'inline-block'}
+                        ),
+                        ],
+                       style={'height': '100%', 'width': '120%', 'display': 'none'}, id="checkbox_gender_component"
+                       ),
+        ], style={
+            'position': 'fixed',
+            'zIndex': 2147483647,
+            'top': '200px',
+            'left': '250px',
+            'margin': 0,
+            'padding': 0,
+            'width': '120px',
+            'height': '100px',
+            'display': 'block',
+        }, id='navi'),
+    ]
+        , style={
+            'position': 'absolute',
+            'zIndex': 35,
+            'top': '140px',
+            'left': '250px',
+            'margin': 0,
+            'padding': 0,
+            'width': '120px',
+            'height': '100px'}, id="demodiv",
+    ),
 
     html.Div([
 
-        dbc.Button('Filter Options', color='primary', block=True, id="button"),
+        dbc.Button('Algorithm Filters', color='primary', block=True, id="button"),
 
         html.Div([
 
@@ -65,34 +122,11 @@ layout = html.Div([
                         ],
                        style={'height': '100%', 'width': '120%', 'display': 'none'}, id="dropdown4_component"
                        ),
-
-            html.Label(["Select State",
-                        dcc.Dropdown(
-                            id="dropdown_state",
-                            options=[
-                            ],
-                            value=[],
-                            multi=True,
-                        ),
-                        ],
-                       style={'height': '100%', 'width': '120%', 'display': 'none'}, id="dropdown5_component"
-                       ),
-            # html.Label(["Select City",
-            #             dcc.Dropdown(
-            #                 id="dropdown_city",
-            #                 options=[
-            #                 ],
-            #                 value=[],
-            #                 multi=True,
-            #             ),
-            #             ],
-            #            style={'height': '100%', 'width': '120%', 'display': 'none'}, id="dropdown6_component"
-            #            ),
         ], style={
             'position': 'fixed',
             'zIndex': 2147483647,
             'top': '200px',
-            'left': '250px',
+            'left': '1200px',
             'margin': 0,
             'padding': 0,
             'width': '120px',
@@ -104,10 +138,10 @@ layout = html.Div([
         'position': 'absolute',
         'zIndex': 35,
         'top': '140px',
-        'left': '250px',
+        'left': '1200px',
         'margin': 0,
         'padding': 0,
-        'width': '100px',
+        'width': '120px',
         'height': '100px'}, id="mydiv"),
     html.Div([
         # dbc.Row([
@@ -130,26 +164,41 @@ layout = html.Div([
      Output(component_id='dropdown2_component', component_property='style'),
      Output(component_id='dropdown3_component', component_property='style'),
      Output(component_id='dropdown4_component', component_property='style'),
-     Output(component_id='dropdown5_component', component_property='style'),
-     # Output(component_id='dropdown6_component', component_property='style'),
      ],
     [Input(component_id='button', component_property='n_clicks')])
 def show_hide_element(click_value):
     # On-load
     if click_value is None:
-        return [{'display': 'none'}, {'display': 'none'}, {'display': 'none'}, {'display': 'none'}, {'display': 'none'}
-                # ,{'display': 'none'}
+        return [{'display': 'none'}, {'display': 'none'}, {'display': 'none'}, {'display': 'none'}
                 ]
     # Show drop-down on even number of clicks
     elif (click_value % 2) == 0:
-        return [{'display': 'none'}, {'display': 'none'}, {'display': 'none'}, {'display': 'none'}, {'display': 'none'}
-                # ,{'display': 'none'}
+        return [{'display': 'none'}, {'display': 'none'}, {'display': 'none'}, {'display': 'none'}
                 ]
     # Show drop-down on odd number of clicks
     else:
-        return [{'display': 'block'}, {'display': 'block'}, {'display': 'block'}, {'display': 'block'},
-                {'display': 'block'}
-                # , {'display': 'block'}
+        return [{'display': 'block'}, {'display': 'block'}, {'display': 'block'}, {'display': 'block'}
+                ]
+
+
+@app.callback(
+    [Output(component_id='dropdown5_component', component_property='style'),
+     Output(component_id='dropdown_city_component', component_property='style'),
+     Output(component_id='checkbox_gender_component', component_property='style'),
+     ],
+    [Input(component_id='demo_button', component_property='n_clicks')])
+def show_hide_element(clicks):
+    # On-load
+    if clicks is None:
+        return [{'display': 'none'}, {'display': 'none'}, {'display': 'none'}
+                ]
+    # Show drop-down on even number of clicks
+    elif (clicks % 2) == 0:
+        return [{'display': 'none'}, {'display': 'none'}, {'display': 'none'}
+                ]
+    # Show drop-down on odd number of clicks
+    else:
+        return [{'display': 'block'}, {'display': 'block'}, {'display': 'block'}
                 ]
 
 
@@ -246,10 +295,11 @@ def set_fm_dropdown_values(href):
 # Setting graph and state dropdown
 @app.callback(Output('graph1', 'figure'), [Input('dropdown1', 'value'), Input('dropdown2', 'value'),
                                            Input('dropdown3', 'value'), Input('dropdown4', 'value'),
-                                           Input('dropdown_state', 'value'),
+                                           Input('dropdown_state', 'value'), Input('dropdown_city', 'value'),
+                                           Input('checkbox_gender', 'value'),
                                            Input('url', 'href')]
               )
-def update_fig(dropdown1, dropdown2, dropdown3, dropdown4, dropdown_state, href):
+def update_fig(dropdown1, dropdown2, dropdown3, dropdown4, dropdown_state, dropdown_city, checkbox_gender, href):
     if href is not None:
 
         # Parse url
@@ -372,6 +422,18 @@ def update_fig(dropdown1, dropdown2, dropdown3, dropdown4, dropdown_state, href)
         else:
             # Condensing dataframe based on state value
             current_df = current_df.loc[current_df["customer_state"].isin(dropdown_state)]
+
+        if dropdown_city == 0 or dropdown_city is None or not dropdown_city:
+            current_df = current_df
+        else:
+            # Condensing dataframe based on state value
+            current_df = current_df.loc[current_df["customer_city"].isin(dropdown_city)]
+
+        if checkbox_gender == 0 or checkbox_gender is None or not checkbox_gender:
+            current_df = current_df
+        else:
+            # Condensing dataframe based on gender value
+            current_df = current_df.loc[current_df["gender"].isin(checkbox_gender)]
 
         locations = []
         for lbl in current_df['rfm'].unique():
@@ -503,14 +565,6 @@ def update_state_dropdown(dropdown1, dropdown2, dropdown3, dropdown4, href):
         customer_df = customer_df.sort_values(by=["rfm"])
         customer_df.reset_index(inplace=True)
 
-        # Define a list of colors
-        # Index0 - Empty, Green - class A , Red - class B, Blue - class C, Orange - class D, Yellow - class E
-        color_val = {'A': 'green',
-                     'B': 'gray',
-                     'C': 'blue',
-                     'D': 'orange',
-                     'E': 'yellow', 'F': 'brown', 'G': 'pink', 'H': 'purple', 'I': 'teal', 'J': 'red'}
-
         if dropdown2 == 0 or dropdown2 is None or not dropdown2:
             current_df = customer_df
         else:
@@ -532,10 +586,211 @@ def update_state_dropdown(dropdown1, dropdown2, dropdown3, dropdown4, href):
         # Based on current_df update return the state options
         states = sorted(current_df['customer_state'].unique())
 
-        print([
-            {'label': f"{brazil_state_code_map[key]}", 'value': key} for key in states
-        ])
-
         return [
             {'label': f"{brazil_state_code_map[key]}", 'value': key} for key in states
         ]
+
+
+@app.callback(
+    Output('dropdown_city', 'options'),
+    [Input('dropdown_state', 'value'), Input('dropdown1', 'value'), Input('dropdown2', 'value'),
+     Input('dropdown3', 'value'), Input('dropdown4', 'value'), Input('url', 'href')],
+)
+def update_city_dropdown(dropdown_state, dropdown1, dropdown2, dropdown3, dropdown4, href):
+    # print(f"options", value)
+    if href is not None:
+
+        # Parse url
+        # print('href is:', href)
+        parsed = urlparse.urlparse(href)
+
+        # Check if no params are passed
+        if len(parse_qs(parsed.query)) == 0:
+            # Assign default parameters object
+            object_id = "5fbe90c4003b52fdc9b8382d"
+        else:
+            object_id = parse_qs(parsed.query)['id'][0]
+
+        # Set access token
+        mapbox_access_token = 'pk.eyJ1IjoiYWhzLXZhIiwiYSI6ImNraGsyMWVmdDByOWszNnNkdzJqcHpwOWMifQ.llITOAaVvDUflVgenIPPlw'
+
+        rfm = RFMData()
+
+        # Should make a call in maps not here
+        rfm_model = pd.DataFrame(rfm.get_records(object_id))
+
+        # Get customers data and append r, f, m, and rfm
+        customer = Customer()
+
+        # Get customer data
+        customer_df = pd.DataFrame(customer.get_customer_data())
+
+        # rfm
+
+        # Initialize labels as 1
+        customer_df["r"] = np.nan
+        customer_df["f"] = np.nan
+        customer_df["m"] = np.nan
+        customer_df["rfm"] = np.nan
+
+        # Retrieve that particular row
+        rfm_model = rfm_model.iloc[[dropdown1]]
+        rfm_model.reset_index(inplace=True)
+
+        # Get list of customers with different R scores and Update r label
+        for item in rfm_model.iloc[0]["r_keys"]:
+            val = "R_score" + item
+            customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0][val]), 'r'] = int(item)
+
+        # Get list of customers with different F,M scores and Update f,m label
+        for i in range(rfm_model['segment_count'].item()):
+            j = i + 1
+            f_var_name = "F_score" + str(j)
+            customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0][f_var_name]), 'f'] = j
+
+            m_score_name = "M_score" + str(j)
+            customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0][m_score_name]), 'm'] = j
+
+        # Get list of different segmented customers and Update rfm label column
+        for i in range(rfm_model['segment_count'].item()):
+            val = "segment_" + chr(65 + i)
+            customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0][val]), 'rfm'] = chr(65 + i)
+
+        # Remove customers with no label
+        customer_df = customer_df[customer_df['rfm'].notna()]
+        customer_df = customer_df.sort_values(by=["rfm"])
+        customer_df.reset_index(inplace=True)
+
+        if dropdown2 == 0 or dropdown2 is None or not dropdown2:
+            current_df = customer_df
+        else:
+            # Condensing dataframe based on R value
+            current_df = customer_df.loc[customer_df["r"].isin(dropdown2)]
+
+        if dropdown3 == 0 or dropdown3 is None or not dropdown3:
+            current_df = current_df
+        else:
+            # Condensing dataframe based on F value
+            current_df = current_df.loc[current_df["f"].isin(dropdown3)]
+
+        if dropdown4 == 0 or dropdown4 is None or not dropdown4:
+            current_df = current_df
+        else:
+            # Condensing dataframe based on M value
+            current_df = current_df.loc[current_df["m"].isin(dropdown4)]
+
+        if dropdown_state == 0 or dropdown_state is None or not dropdown_state:
+            cities = current_df['customer_city'].unique()
+        else:
+            # Get cities based on current state selection
+            cities = current_df.loc[current_df['customer_state'].isin(dropdown_state)]['customer_city'].unique()
+
+        return [
+            {'label': f"{key}", 'value': key} for key in cities
+        ]
+
+
+@app.callback(
+    Output('checkbox_gender', 'options'),
+    [Input('dropdown1', 'value'), Input('dropdown2', 'value'),
+     Input('dropdown3', 'value'), Input('dropdown4', 'value'), Input('dropdown_state', 'value'),
+     Input('dropdown_city', 'value'), Input('url', 'href')],
+)
+def update_gender_checkbox(dropdown1, dropdown2, dropdown3, dropdown4,dropdown_state, dropdown_city, href):
+    # print(f"options", value)
+
+    if href is not None:
+
+        # Parse url
+        # print('href is:', href)
+        parsed = urlparse.urlparse(href)
+
+        # Check if no params are passed
+        if len(parse_qs(parsed.query)) == 0:
+            # Assign default parameters object
+            object_id = "5fbe90c4003b52fdc9b8382d"
+        else:
+            object_id = parse_qs(parsed.query)['id'][0]
+
+        # Set access token
+        mapbox_access_token = 'pk.eyJ1IjoiYWhzLXZhIiwiYSI6ImNraGsyMWVmdDByOWszNnNkdzJqcHpwOWMifQ.llITOAaVvDUflVgenIPPlw'
+
+        rfm = RFMData()
+
+        # Should make a call in maps not here
+        rfm_model = pd.DataFrame(rfm.get_records(object_id))
+
+        # Get customers data and append r, f, m, and rfm
+        customer = Customer()
+
+        # Get customer data
+        customer_df = pd.DataFrame(customer.get_customer_data())
+
+        # rfm
+
+        # Initialize labels as 1
+        customer_df["r"] = np.nan
+        customer_df["f"] = np.nan
+        customer_df["m"] = np.nan
+        customer_df["rfm"] = np.nan
+
+        # Retrieve that particular row
+        rfm_model = rfm_model.iloc[[dropdown1]]
+        rfm_model.reset_index(inplace=True)
+
+        # Get list of customers with different R scores and Update r label
+        for item in rfm_model.iloc[0]["r_keys"]:
+            val = "R_score" + item
+            customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0][val]), 'r'] = int(item)
+
+        # Get list of customers with different F,M scores and Update f,m label
+        for i in range(rfm_model['segment_count'].item()):
+            j = i + 1
+            f_var_name = "F_score" + str(j)
+            customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0][f_var_name]), 'f'] = j
+
+            m_score_name = "M_score" + str(j)
+            customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0][m_score_name]), 'm'] = j
+
+        # Get list of different segmented customers and Update rfm label column
+        for i in range(rfm_model['segment_count'].item()):
+            val = "segment_" + chr(65 + i)
+            customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0][val]), 'rfm'] = chr(65 + i)
+
+        # Remove customers with no label
+        customer_df = customer_df[customer_df['rfm'].notna()]
+        customer_df = customer_df.sort_values(by=["rfm"])
+        customer_df.reset_index(inplace=True)
+
+        if dropdown2 == 0 or dropdown2 is None or not dropdown2:
+            current_df = customer_df
+        else:
+            # Condensing dataframe based on R value
+            current_df = customer_df.loc[customer_df["r"].isin(dropdown2)]
+
+        if dropdown3 == 0 or dropdown3 is None or not dropdown3:
+            current_df = current_df
+        else:
+            # Condensing dataframe based on F value
+            current_df = current_df.loc[current_df["f"].isin(dropdown3)]
+
+        if dropdown4 == 0 or dropdown4 is None or not dropdown4:
+            current_df = current_df
+        else:
+            # Condensing dataframe based on M value
+            current_df = current_df.loc[current_df["m"].isin(dropdown4)]
+
+        if dropdown_state == 0 or dropdown_state is None or not dropdown_state:
+            current_df = current_df
+        else:
+            # Condensing dataframe based on State value
+            current_df = current_df.loc[current_df["customer_state"].isin(dropdown_state)]
+
+        if dropdown_city == 0 or dropdown4 is None or not dropdown4:
+            current_df = current_df
+        else:
+            # Condensing dataframe based on city value
+            current_df = current_df.loc[current_df["customer_city"].isin(dropdown_city)]
+        gender_options = [{'label': key, 'value': key} for key in sorted(current_df['gender'].unique())]
+
+        return gender_options
