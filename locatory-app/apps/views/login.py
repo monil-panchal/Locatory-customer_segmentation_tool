@@ -13,11 +13,12 @@ layout = dbc.Container([
         dcc.Location(id='urlLogin', refresh=True),
         html.Div([
             dbc.Container(
-                html.Div(
-                    html.H3('Welcome to Locatory')
+                html.Img(
+                    src='/assets/locatory-logo-removebg-preview.png',
+                    className='center'
                 ),
-
             ),
+            html.Br(),
             dbc.Container(id='loginType', children=[
                 dcc.Input(
                     placeholder='Enter your username',
@@ -41,7 +42,7 @@ layout = dbc.Container([
                     className='btn btn-primary btn-lg'
                 ),
                 html.Br(),
-            ], className='form-group'),
+            ], className='center', style={'width': '51%'}),
             dbc.Container(
                 html.Div(id='error'
                          ),
