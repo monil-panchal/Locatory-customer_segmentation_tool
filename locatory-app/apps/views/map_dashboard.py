@@ -3,9 +3,12 @@ import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
 import plotly.graph_objects as go
+import flask
+from flask import Response
+from io import StringIO
 from apps.user.customer import Customer
 from dash.dependencies import Input, Output, State
-from app import app
+from app import app, server
 from apps.config.constants import brazil_state_code_map, mapbox_access_token
 
 select_country_div = html.Div([
@@ -82,7 +85,8 @@ layout = dbc.Container([
             html.H2('Map Dashboard'),
             html.Hr(),
         html.Div([
-            dbc.Button('Filter Options', color='primary', block=True, id="demographic_filter_button"),
+                    dbc.Button('Filter Options', color='primary', block=True, id="demographic_filter_button"),
+
             html.Div([
 
                     dbc.Row(
@@ -104,11 +108,10 @@ layout = dbc.Container([
                         dbc.Col(select_age_range_div, width="6"),
                         dbc.Col(select_income_range_div, width="6"),
                         ]
-                        ),
-                    # html.Br(),
-                    # dbc.Row(
-                    #     select_income_range_div,
-                    # )
+                    ),
+                    dbc.Row(
+                        dcc.Link('Export Csv', id="export-csv-link", href="/map_dashboard/exportCsv")
+                    )
 
             ], style={
                 'position': 'fixed',
@@ -139,6 +142,7 @@ layout = dbc.Container([
                           )
             ],style={'zIndex': 1, 'position': 'absolute', 'top': '0', 'left': '0', 'marginLeft': '-80px',
               'marginTop': '-8px'})
+
         ], className="mt-4")
 
 
@@ -181,7 +185,7 @@ def update_income_range_div(value):
 def update_state_dropdown(value):
     print(f"options",value)
     customer = Customer()
-    customer_df = pd.DataFrame(customer.get_customer_data())
+    customer_df = customer.get_customer_dataframe()
     df = customer_df.loc[customer_df['customer_country'].isin(value)]
     states = sorted(df['customer_state'].unique())
     return [
@@ -195,19 +199,26 @@ def update_state_dropdown(value):
 def update_city_dropdown(value):
     print(f"options",value)
     customer = Customer()
-    customer_df = pd.DataFrame(customer.get_customer_data())
+    customer_df = customer.get_customer_dataframe()
     unique_cities = customer_df.loc[customer_df['customer_state'].isin(value)]['customer_city'].unique()
     return [
         {'label': f"{key}", 'value': key} for key in unique_cities
     ], unique_cities
 
-@app.callback(Output('graph', 'figure'), [Input('gender_checkbox', 'value'), Input('age-range-slider', 'value'),
-                                          Input('income-range-slider', 'value'), Input('country_checkbox', 'value'),
-                                          Input('state_dropdown', 'value')])
+@app.callback(Output('graph', 'figure'), Output('export-csv-link', 'href'),
+              [Input('gender_checkbox', 'value'), Input('age-range-slider', 'value'),
+              Input('income-range-slider', 'value'), Input('country_checkbox', 'value'),
+              Input('state_dropdown', 'value')],
+              )
 def update_fig(gender_values, age_range, income_range, countries, states):
     print(age_range, gender_values, income_range, countries, states)
+    export_csv_link = f"/map_dashboard/exportCsv?countries={','.join(countries)}" \
+                      f"&states={','.join(states)}" \
+                      f"&gender_values={','.join(gender_values)}" \
+                      f"&income_range={','.join([str(v) for v in income_range])}" \
+                      f"&age_range={','.join([str(v) for v in age_range])}"
     customer = Customer()
-    customer_df = pd.DataFrame(customer.get_customer_data())
+    customer_df = customer.get_customer_dataframe()
     df = customer_df
     print(customer_df[0:3])
     if countries is not None:
@@ -250,7 +261,7 @@ def update_fig(gender_values, age_range, income_range, countries, states):
                 zoom=3
             ),
         )
-    }
+    }, export_csv_link
 
 @app.callback(Output('country_checkbox', 'options'),
             Output('gender_checkbox', 'options'), Output('age-range-slider', 'min'),
@@ -274,7 +285,7 @@ def display_page(href):
     print('Called on page loading via url in map')
     if href is not None and 'map_dashboard' == href.split('/')[-1]:
         customer = Customer()
-        customer_df = pd.DataFrame(customer.get_customer_data())
+        customer_df = customer.get_customer_dataframe()
         country_checkbox_options = [{'label': key, 'value': key} for key in sorted(customer_df['customer_country'].unique())]
         gender_checkbox_options = [{'label': key, 'value': key} for key in sorted(customer_df['gender'].unique())]
         age_range_slider_min = customer_df['age'].min()
@@ -296,3 +307,39 @@ def display_page(href):
            income_range_slider_max, \
            income_range_slider_value, \
            income_range_slider_marks
+
+
+@server.route('/map_dashboard/exportCsv')
+def download_csv():
+    print('download_csv', flask.request.args)
+    customer = Customer()
+    df = customer.get_customer_dataframe()
+    countries = flask.request.args.get('countries').split(',')
+    states = flask.request.args.get('states').split(',')
+    gender_values = flask.request.args.get('gender_values').split(',')
+    age_range = flask.request.args.get('age_range').split(',')
+    income_range = flask.request.args.get('income_range').split(',')
+
+    if countries is not None:
+        df = df.loc[df['customer_country'].isin(countries)]
+    if states is not None:
+        df = df.loc[df['customer_state'].isin(states)]
+    if gender_values is not None:
+        df = df.loc[df['gender'].isin(gender_values)]
+    if age_range is not None and len(age_range) == 2:
+        df = df.loc[(df['age'] >= int(age_range[0])) & (df['age'] <= int(age_range[1]))]
+    if income_range is not None and len(income_range) == 2:
+        df = df.loc[(df['income'] >= int(income_range[0])) & (df['income'] <= int(income_range[1]))]
+
+    if 'customer_id' in df.columns:
+        df = df.drop(columns=['customer_id'])
+
+    return Response(
+        df.to_csv(index=False),
+        mimetype="text/csv",
+        headers={"Content-disposition":
+                     "attachment; filename=customers.csv"})
+    # return send_file(strIO,
+    #                  mimetype='text/csv',
+    #                  attachment_filename='downloadFile.csv',
+    #                  as_attachment=True)

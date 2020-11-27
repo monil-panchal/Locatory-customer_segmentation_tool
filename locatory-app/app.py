@@ -50,3 +50,7 @@ def load_user(user_id):
 
 
 
+@server.route('/hello')
+def say_hello():
+    print('download_csv')
+    return 'Hello'
