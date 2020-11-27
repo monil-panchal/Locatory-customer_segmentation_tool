@@ -110,7 +110,7 @@ layout = dbc.Container([
                         ]
                     ),
                     dbc.Row(
-                        dcc.Link('Export Csv', id="export-csv-link", href="/map_dashboard/exportCsv")
+                        dcc.Link('Export Csv', refresh=True, id="export-csv-link", href="/map_dashboard/exportCsv")
                     )
 
             ], style={
