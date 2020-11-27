@@ -14,16 +14,11 @@ layout = dbc.Container([
         html.Div([
             dbc.Container(
                 html.Img(
-                    src='/assets/locatory-logo.png',
+                    src='/assets/locatory-logo-removebg-preview.png',
                     className='center'
                 ),
             ),
             html.Br(),
-            dbc.Container(
-                html.Div(children=
-                         [html.H3('Welcome to Locatory', className='center')],
-                         ), className='center'
-            ),
             dbc.Container(id='loginType', children=[
                 dcc.Input(
                     placeholder='Enter your username',
