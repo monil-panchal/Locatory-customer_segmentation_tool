@@ -76,14 +76,21 @@ def display_page(pathname):
 def navBar(input1):
     if current_user.is_authenticated:
         navBarContents = [
-            dbc.NavItem(dbc.NavLink('Sales Dashboard', href='/sales_dashboard')),
-            dbc.NavItem(dbc.NavLink('Map Dashboard', href='/map_dashboard')),
-            dbc.NavItem(dbc.NavLink('Default RFM Dashboard', href='/other_dashboard')),
-            dbc.NavItem(dbc.NavLink('Custom Maps List', href='/custom_maps_list')),
+            dbc.NavLink(html.Img(src='/assets/locatory-logo-removebg-preview.png',
+                                 style={"height": 60, "width": 300}), href='/sales_dashboard'),
+            dbc.NavLink('Sales Dashboard',
+                        href='/sales_dashboard', style={"color": "orange"}),
+            dbc.NavLink('Demographic-Geographic Segmentation',
+                        href='/map_dashboard', style={"color": "orange"}),
+            dbc.NavLink('Default Combined Segmentation',
+                        href='/other_dashboard', style={"color": "orange"}),
+            dbc.NavLink('Custom Combined Segmentation',
+                        href='/custom_maps_list', style={"color": "orange"}),
             dbc.DropdownMenu(
-                nav=True,
                 in_navbar=True,
                 label=current_user.get_id(),
+                className="ml-auto",
+                color="warning",
                 children=[
                     dbc.DropdownMenuItem('Profile', href='/profile'),
                     dbc.DropdownMenuItem(divider=True),

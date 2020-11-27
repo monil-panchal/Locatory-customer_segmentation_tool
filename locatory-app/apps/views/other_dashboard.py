@@ -233,7 +233,8 @@ def set_dropdown(href):
         # print(period_values)
 
         # Set dropdown values
-        dropdown_values = [dict(label=x, value=i) for i, x in enumerate(period_values)]
+        dropdown_values = [dict(label=x, value=i)
+                           for i, x in enumerate(period_values)]
 
         # Get rfm dataframe
         # print(rfm_data)
@@ -255,7 +256,8 @@ def set_dropdown(href):
         print('R score is:')
         print(list_key)
 
-        dropdown2_values = [dict(label=x, value=int(list_key[i])) for i, x in enumerate(dropdown_labels)]
+        dropdown2_values = [dict(label=x, value=int(list_key[i]))
+                            for i, x in enumerate(dropdown_labels)]
 
         # print(dropdown_values)
         return dropdown_values, dropdown2_values
@@ -287,7 +289,8 @@ def set_fm_dropdown_values(href):
             value = "value: " + str(i)
             dropdown_labels.append(value)
 
-        dropdown_values = [dict(label=x, value=i + 1) for i, x in enumerate(dropdown_labels)]
+        dropdown_values = [dict(label=x, value=i + 1)
+                           for i, x in enumerate(dropdown_labels)]
 
         return dropdown_values, dropdown_values
 
@@ -360,16 +363,19 @@ def update_fig(dropdown1, dropdown2, dropdown3, dropdown4, dropdown_state, dropd
         # Get list of customers with different R scores and Update r label
         for item in rfm_model.iloc[0]["r_keys"]:
             val = "R_score" + item
-            customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0][val]), 'r'] = int(item)
+            customer_df.loc[customer_df["customer_id"].isin(
+                rfm_model.loc[0][val]), 'r'] = int(item)
 
         # Get list of customers with different F,M scores and Update f,m label
         for i in range(rfm_model['segment_count'].item()):
             j = i + 1
             f_var_name = "F_score" + str(j)
-            customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0][f_var_name]), 'f'] = j
+            customer_df.loc[customer_df["customer_id"].isin(
+                rfm_model.loc[0][f_var_name]), 'f'] = j
 
             m_score_name = "M_score" + str(j)
-            customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0][m_score_name]), 'm'] = j
+            customer_df.loc[customer_df["customer_id"].isin(
+                rfm_model.loc[0][m_score_name]), 'm'] = j
 
         # print(rfm_model['segment_count'].item())
 
@@ -378,7 +384,8 @@ def update_fig(dropdown1, dropdown2, dropdown3, dropdown4, dropdown_state, dropd
         # Get list of different segmented customers and Update rfm label column
         for i in range(rfm_model['segment_count'].item()):
             val = "segment_" + chr(65 + i)
-            customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0][val]), 'rfm'] = chr(65 + i)
+            customer_df.loc[customer_df["customer_id"].isin(
+                rfm_model.loc[0][val]), 'rfm'] = chr(65 + i)
 
         # print(customer_df)
         # print(customer_df.columns)
@@ -421,7 +428,8 @@ def update_fig(dropdown1, dropdown2, dropdown3, dropdown4, dropdown_state, dropd
             current_df = current_df
         else:
             # Condensing dataframe based on state value
-            current_df = current_df.loc[current_df["customer_state"].isin(dropdown_state)]
+            current_df = current_df.loc[current_df["customer_state"].isin(
+                dropdown_state)]
 
         if dropdown_city == 0 or dropdown_city is None or not dropdown_city:
             current_df = current_df
@@ -544,21 +552,25 @@ def update_state_dropdown(dropdown1, dropdown2, dropdown3, dropdown4, href):
         # Get list of customers with different R scores and Update r label
         for item in rfm_model.iloc[0]["r_keys"]:
             val = "R_score" + item
-            customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0][val]), 'r'] = int(item)
+            customer_df.loc[customer_df["customer_id"].isin(
+                rfm_model.loc[0][val]), 'r'] = int(item)
 
         # Get list of customers with different F,M scores and Update f,m label
         for i in range(rfm_model['segment_count'].item()):
             j = i + 1
             f_var_name = "F_score" + str(j)
-            customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0][f_var_name]), 'f'] = j
+            customer_df.loc[customer_df["customer_id"].isin(
+                rfm_model.loc[0][f_var_name]), 'f'] = j
 
             m_score_name = "M_score" + str(j)
-            customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0][m_score_name]), 'm'] = j
+            customer_df.loc[customer_df["customer_id"].isin(
+                rfm_model.loc[0][m_score_name]), 'm'] = j
 
         # Get list of different segmented customers and Update rfm label column
         for i in range(rfm_model['segment_count'].item()):
             val = "segment_" + chr(65 + i)
-            customer_df.loc[customer_df["customer_id"].isin(rfm_model.loc[0][val]), 'rfm'] = chr(65 + i)
+            customer_df.loc[customer_df["customer_id"].isin(
+                rfm_model.loc[0][val]), 'rfm'] = chr(65 + i)
 
         # Remove customers with no label
         customer_df = customer_df[customer_df['rfm'].notna()]

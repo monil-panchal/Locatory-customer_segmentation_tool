@@ -11,7 +11,8 @@ class RFMData:
         print('Get all end dates of a particular segmentation id:')
         # print(self.db.RFMSegments.find({'segmentation_parameters_id': object_value}, {'end_date': 1}))
         # Get end dates and return a list of all end dates
-        cursor = self.db.RFMSegments.find({'segmentation_parameters_id': object_value}, {'end_date': 1})
+        cursor = self.db.RFMSegments.find(
+            {'segmentation_parameters_id': object_value}, {'end_date': 1})
         end_dates = []
         for item in cursor:
             # print('Matched items')
@@ -24,7 +25,9 @@ class RFMData:
     def get_records(self, object_value):
         print('Calling get records')
         # print(type(object_value))
-        cursor = self.db.RFMSegments.find({'segmentation_parameters_id': object_value})
+        # TODO: sort and limit to 1
+        cursor = self.db.RFMSegments.find(
+            {'segmentation_parameters_id': object_value})
         # , 'F': 1, 'M': 1, 'organization_id': 1, 'start_date': 1, 'end_date': 1, 'RFM': 1, 'segment_count': 1})
         for item in cursor:
             my_items = {}
@@ -97,7 +100,8 @@ class RFMData:
                 my_items[f_var_name] = globals()[f_var_name]['customer_ids']
 
                 m_score_name = "M_score" + str(i + 1)
-                my_items[m_score_name] = globals()[m_score_name]['customer_ids']
+                my_items[m_score_name] = globals(
+                )[m_score_name]['customer_ids']
 
             # print('Length of segments is:', len_val)
             # Get RFM segment-wise customer ids
@@ -111,7 +115,8 @@ class RFMData:
         return self.rfm
 
     def get_segment_size(self, object_value):
-        cursor = self.db.RFMSegments.find({'segmentation_parameters_id': object_value}, {'segment_count': 1})
+        cursor = self.db.RFMSegments.find(
+            {'segmentation_parameters_id': object_value}, {'segment_count': 1})
         for item in cursor:
             # Return the segment size
             return item["segment_count"]
