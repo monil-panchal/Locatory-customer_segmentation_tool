@@ -30,9 +30,13 @@ class RFM:
                       'Authorization': 'Bearer ' + auth_token['access_token']}
             data = {"document_id": seg_params_mongo_id}
             start = timeit.default_timer()
-            response = requests.post(f"{RFM_API_CREDENTIALS[CURRENT_ENV].get('host')}rfm/rfm_segmentation_with_saved_data", data=json.dumps(data),
+            print(f'header: {header}')
+            print(f'data: {data}')
+            
+            print(f"{RFM_API_CREDENTIALS[CURRENT_ENV].get('host')}rfm/rfm_segmentation_with_saved_data/")
+            response = requests.post(f"{RFM_API_CREDENTIALS[CURRENT_ENV].get('host')}rfm/rfm_segmentation_with_saved_data/", data=json.dumps(data),
                                  headers=header)
-            print(response)
+            print(response, response.json())
             if response is not None and response.status_code == 200:
                 print(response.json())
                 success = True

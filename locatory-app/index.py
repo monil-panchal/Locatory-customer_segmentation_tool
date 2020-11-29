@@ -8,6 +8,8 @@ from flask_login import current_user, logout_user
 from app import app
 from apps.views import login, map_dashboard, other_dashboard, profile, sales_dashboard, custom_maps
 
+server = app.server
+
 navBar = dbc.Navbar(id='navBar',
                     children=[],
                     sticky='top',
