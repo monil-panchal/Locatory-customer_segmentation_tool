@@ -1,3 +1,4 @@
+import os
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
@@ -104,4 +105,4 @@ def navBar(input1):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(host='0.0.0.0', port=os.environ.get('PORT', 8080), debug=True)
