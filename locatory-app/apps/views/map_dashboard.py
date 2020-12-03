@@ -129,9 +129,6 @@ layout = dbc.Container([
                 dbc.Col(select_income_range_div, width="6"),
             ]
             ),
-            dbc.Row(
-                dcc.Link('Export Csv', refresh=True, id="export-csv-link", href="/map_dashboard/exportCsv")
-            )
 
         ], style={
             'position': 'fixed',
@@ -154,6 +151,20 @@ layout = dbc.Container([
         'width': '120px',
         'height': '100px'}, id="demographic_filters_div"
     ),
+
+    html.Div([
+        dcc.Link('Export Csv', refresh=True, id="export-csv-link", href="/map_dashboard/exportCsv")
+    ], style={
+        'position': 'absolute',
+        'zIndex': 35,
+        'top': '150px',
+        'left': '150px',
+        'margin': 0,
+        'padding': 0,
+        'width': '120px',
+        'height': '100px'}, id="export_div"
+    ),
+
     # map
     html.Div([
         dcc.Graph(id='graph', config={'displayModeBar': False, 'scrollZoom': True},
@@ -244,6 +255,8 @@ def update_fig(gender_values, age_range, income_range, countries, states):
                       f"&gender_values={','.join(gender_values)}" \
                       f"&income_range={','.join([str(v) for v in income_range])}" \
                       f"&age_range={','.join([str(v) for v in age_range])}"
+    print("export csv link")
+    print(export_csv_link)
     customer = Customer()
     customer_df = customer.get_customer_dataframe()
     df = customer_df

@@ -34,6 +34,8 @@ import os
 
 mapbox_access_token = 'pk.eyJ1IjoiYWhzLXZhIiwiYSI6ImNraGsyMWVmdDByOWszNnNkdzJqcHpwOWMifQ.llITOAaVvDUflVgenIPPlw'
 
+default_object_id = "5fbe90c4003b52fdc9b8382d"
+
 CURRENT_ENV = 'dev'
 RFM_API_CREDENTIALS = {
     "dev": {

@@ -8,48 +8,33 @@ class RFMData:
         self.rfm = []
 
     def get_all_end_dates(self, object_value):
-        print('Get all end dates of a particular segmentation id:')
-        # print(self.db.RFMSegments.find({'segmentation_parameters_id': object_value}, {'end_date': 1}))
         # Get end dates and return a list of all end dates
         cursor = self.db.RFMSegments.find(
             {'segmentation_parameters_id': object_value}, {'end_date': 1})
         end_dates = []
         for item in cursor:
-            # print('Matched items')
-            # print(item)
             end_dates.append(item['end_date'])
         return end_dates
 
-        # return self.db.RFMSegments.find({'segmentation_parameters_id': object_value}, {'end_date': 1})
-
     def get_records(self, object_value):
-        print('Calling get records')
-        # print(type(object_value))
-        # TODO: sort and limit to 1
         cursor = self.db.RFMSegments.find(
             {'segmentation_parameters_id': object_value})
-        # , 'F': 1, 'M': 1, 'organization_id': 1, 'start_date': 1, 'end_date': 1, 'RFM': 1, 'segment_count': 1})
         for item in cursor:
             my_items = {}
-            # print('----printing items----')
-            # print(item)
 
             # Retrieve r,f,m objects
             r_values = item.pop('R', {})
             f_values = item.pop('F', {})
             m_values = item.pop('M', {})
             rfm_values = item.pop('RFM', {})
-            # print('----Values----')
-            # print(rfm_values)
-            # print(r_values)
+
+            # Get individual scores
             r_scores = r_values.pop('score', {})
             f_scores = f_values.pop('score', {})
             m_scores = m_values.pop('score', {})
             segments = rfm_values.pop('segments', {})
-            # print("Segments are:")
-            # print(segments)
 
-            # print("R-scores::")
+            # Get r-score key list
             keys_list = list(r_scores.keys())
 
             # Store length of segments:
@@ -84,9 +69,7 @@ class RFMData:
             my_items.update(f_scores)
             my_items.update(m_scores)
 
-            # print(list(r_scores.keys()))
             # Append keys to r_keys
-            # print(list(r_scores.keys()))
             my_items["r_keys"] = keys_list
 
             # Get R score-wise customer ids
@@ -103,13 +86,10 @@ class RFMData:
                 my_items[m_score_name] = globals(
                 )[m_score_name]['customer_ids']
 
-            # print('Length of segments is:', len_val)
             # Get RFM segment-wise customer ids
             for i in range(len_val):
                 val = "segment_" + chr(65 + i)
                 my_items[val] = globals()[val]['customer_ids']
-
-            # print(my_items["r_keys"])
 
             self.rfm.append(my_items)
         return self.rfm
