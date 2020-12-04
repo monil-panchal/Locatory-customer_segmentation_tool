@@ -4,14 +4,15 @@ from apps.db.mongo_connection import PyMongo
 class AppUser:
 
     def __init__(self):
-        self.db = PyMongo().get_db_connection()
+        pass
 
     def get_customer_data(self, username):
-        print(f'fetching the user: {username}')
-        cursor = self.db.Users.find({"email": username})
+        pymongoObj = PyMongo()
+        db = pymongoObj.get_db_connection()
+        cursor = db.Users.find({"email": username})
         user = {}
         for item in cursor:
-            print(f'item: {item}')
             user = item
 
+        pymongoObj.close_db_connection()
         return user

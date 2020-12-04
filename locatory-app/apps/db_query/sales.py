@@ -6,10 +6,12 @@ import calendar
 class Sales:
 
     def __init__(self):
-        self.db = PyMongo().get_db_connection()
+        pass
 
     def fetch_timeline(self):
-        cursor = self.db.Orders.aggregate([
+        pymongoObj = PyMongo()
+        db = pymongoObj.get_db_connection()
+        cursor = db.Orders.aggregate([
             {
                 '$project': {
                     'year': {
@@ -32,10 +34,13 @@ class Sales:
         for item in cursor:
             data[item['_id']] = item['months']
 
+        pymongoObj.close_db_connection()
         return data
 
     def fetch_geo_info(self):
-        cursor = self.db.Orders.aggregate([
+        pymongoObj = PyMongo()
+        db = pymongoObj.get_db_connection()
+        cursor = db.Orders.aggregate([
             {
                 '$group': {
                     '_id': {
@@ -60,6 +65,7 @@ class Sales:
                 }
             }
         ])
+        pymongoObj.close_db_connection()
         return list(cursor)
 
     def get_orders_for_dashboard(self, data: dict):
@@ -67,6 +73,10 @@ class Sales:
         print(f'data received in db call: {data}')
 
         if data:
+
+            pymongoObj = PyMongo()
+            db = pymongoObj.get_db_connection()
+
             year = data.get('year', None)
             prev_year = data.get('prev_year', None)
             month = data.get('month', None)
@@ -104,13 +114,6 @@ class Sales:
                     year_query = {'$expr': {'$eq': [{'$year': '$order_date'}, year]}}
                     queries.append(year_query)
 
-            # year_query = {'$expr': {'$eq': [{'$year': '$order_date'}, year]}}
-            # queries.append(year_query)
-            #
-            # if month:
-            #     month_query = {'$expr': {'$eq': [{'$month': '$order_date'}, month]}}
-            #     queries.append(month_query)
-
             country_query = {'customer.address.customer_country': country}
             queries.append(country_query)
 
@@ -128,11 +131,12 @@ class Sales:
             print(f'dashboard_data_query: {dashboard_data_query}')
 
             orders = []
-            cursor = self.db.Orders.find(dashboard_data_query)
+            cursor = db.Orders.find(dashboard_data_query)
             for order in cursor:
                 orders.append(order)
 
             print(f'number of orders retrieved are: {len(orders)}')
+            pymongoObj.close_db_connection()
             return orders
 
         return []

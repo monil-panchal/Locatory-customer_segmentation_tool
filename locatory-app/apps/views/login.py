@@ -5,7 +5,7 @@ from dash.dependencies import Input, Output, State
 from flask_login import login_user
 
 from app import app, User
-from apps.user.user import AppUser
+from apps.db_query.user import AppUser
 
 layout = dbc.Container([
     html.Br(),
@@ -24,7 +24,7 @@ layout = dbc.Container([
                     placeholder='Enter your username',
                     type='text',
                     id='usernameBox',
-                    className='form-control'
+                    className='form-control',
                 ),
                 html.Br(),
                 dcc.Input(
@@ -36,16 +36,22 @@ layout = dbc.Container([
                 html.Br(),
                 html.Button(
                     children='Login',
-                    n_clicks=0,
+                    n_clicks=-1,
                     type='submit',
                     id='loginButton',
                     className='btn btn-primary btn-lg'
                 ),
                 html.Br(),
             ], className='center', style={'width': '51%'}),
-            dbc.Container(
-                html.Div(id='error'
-                         ),
+            dbc.Toast(
+                "Username or password is incorrect or empty",
+                id="error-toast",
+                header="Error while signing you in",
+                is_open=False,
+                dismissable=True,
+                icon="danger",
+                duration=5000,
+                style={"position": "fixed", "top": '5%', "left": '35%', "width": '25%'},
             ),
         ]),
     ], className='jumbotron')
@@ -53,30 +59,27 @@ layout = dbc.Container([
 
 
 @app.callback([Output('urlLogin', 'pathname'),
-               Output('error', 'children')],
-              [Input('loginButton', 'n_clicks'),
-               Input('usernameBox', 'n_submit'),
-               Input('passwordBox', 'n_submit')],
+               Output("error-toast", "is_open")],
+              [Input('loginButton', 'n_clicks')],
               [State('usernameBox', 'value'),
                State('passwordBox', 'value')]
               )
-def success(n_clicks, usernameSubmit, passwordSubmit, username, password):
-    print('calling the callback')
-    print(f'username: {username}')
-    print(f'password: {password}')
+def success(n_clicks, username, password):
+    if n_clicks < 0:
+        return '/', None
+
     if None not in (username, password):
         user = AppUser().get_customer_data(username=username)
-        print(f'user from db: {user}')
         if user:
             if password == user['password']:
-                print('user authenticated successfully')
+                print('db_query authenticated successfully')
                 loggedin_user = User(user)
                 login_user(loggedin_user)
-                return '/sales_dashboard', None
+                return '/sales_dashboard', False
             else:
-                print('user not authenticated successfully')
-                return '/', 'Please check your credentials'
+                print('db_query not authenticated successfully')
+                return '/', True
         else:
-            return '/', 'Please check your credentials'
+            return '/', True
     else:
-        return '/', None
+        return '/', True

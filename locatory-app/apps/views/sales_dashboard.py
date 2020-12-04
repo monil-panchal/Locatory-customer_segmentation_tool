@@ -8,7 +8,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-from apps.user.sales import Sales
+from apps.db_query.sales import Sales
 
 from app import app
 from apps.views.graphs.sales_bar_graph import generate_bar_graph_by_orders, generate_bar_graph_by_sales
@@ -322,7 +322,6 @@ layout = html.Div([
             ], id='menu', style={'position': 'sticky', 'top': '0'}),
         ], width='2'),
 
-
         dbc.Col([
             dbc.Row([
                 dbc.Col([
@@ -356,7 +355,17 @@ layout = html.Div([
                 ]),
             ])
         ], width='10')
-    ])
+    ]),
+    dbc.Toast(
+        "Please select at least the year and country for viewing the sales data.",
+        id="sales-error-toast",
+        header="Error fetching the sales data",
+        is_open=False,
+        dismissable=True,
+        icon="danger",
+        duration=5000,
+        style={"position": "fixed", "top": '20%', "left": '35%', "width": '25%'},
+    ),
 ])
 
 
@@ -438,7 +447,8 @@ def display_geo_data_cities(country, state):
 
 
 @app.callback(
-    [Output('sales_dashboard', 'children'),
+    [Output("sales-error-toast", "is_open"),
+     Output('sales_dashboard', 'children'),
      Output('total_orders', 'children'),
      Output('total_sales', 'children'),
      Output('highest_order_value', 'children'),
@@ -502,17 +512,21 @@ def submit_dashboard_request(n_clicks, year, month, country, state, city):
                 map_sales = generate_density_map(current_df)
             else:
                 bar_graph_by_sales, \
-                    bar_graph_by_orders, \
-                    pie_chart_by_location, \
-                    pie_chart_by_item_category, \
-                    map_sales = {}, {}, {}, {}, {}
-
-            return None, dashboard_data_stat.get('total_orders', 0), \
-                "$ " + str(dashboard_data_stat.get('total_sales', 0.0)), \
-                "$ " + str(dashboard_data_stat.get('highest_order_value', 0.0)), \
-                "$ " + str(dashboard_data_stat.get('lowest_order_value', 0.0)), \
-                "$ " + str(dashboard_data_stat.get('average_order_value', 0.0)), \
                 bar_graph_by_orders, \
-                bar_graph_by_sales, pie_chart_by_location, pie_chart_by_item_category, map_sales
+                pie_chart_by_location, \
+                pie_chart_by_item_category, \
+                map_sales = {}, {}, {}, {}, {}
+
+            return False, None, dashboard_data_stat.get('total_orders', 0), \
+                   "$ " + str(dashboard_data_stat.get('total_sales', 0.0)), \
+                   "$ " + str(dashboard_data_stat.get('highest_order_value', 0.0)), \
+                   "$ " + str(dashboard_data_stat.get('lowest_order_value', 0.0)), \
+                   "$ " + str(dashboard_data_stat.get('average_order_value', 0.0)), \
+                   bar_graph_by_orders, \
+                   bar_graph_by_sales, pie_chart_by_location, pie_chart_by_item_category, map_sales
+
+        else:
+            print('Year and country should not be emtpy for fetching dashboard data')
+            return True, None, None, None, None, None, None, {}, {}, {}, {}, {}
     else:
-        return None, None, None, None, None, None, {}, {}, {}, {}, {}
+        return None, None, None, None, None, None, None, {}, {}, {}, {}, {}

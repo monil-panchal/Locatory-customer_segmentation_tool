@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 import flask
 from flask import Response
 from io import StringIO
-from apps.user.customer import Customer
+from apps.db_query.customer import Customer
 from dash.dependencies import Input, Output, State
 from app import app, server
 from apps.config.constants import brazil_state_code_map, mapbox_access_token
