@@ -2,7 +2,7 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
-from apps.user.customer import Customer
+from apps.db_query.customer import Customer
 from apps.rfm.rfm import RFMData
 from dash.dependencies import Output, Input, State
 import plotly.graph_objects as go

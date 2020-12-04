@@ -5,7 +5,7 @@ from dash.dependencies import Input, Output, State
 from flask_login import login_user
 
 from app import app, User
-from apps.user.user import AppUser
+from apps.db_query.user import AppUser
 
 layout = dbc.Container([
     html.Br(),
@@ -72,12 +72,12 @@ def success(n_clicks, username, password):
         user = AppUser().get_customer_data(username=username)
         if user:
             if password == user['password']:
-                print('user authenticated successfully')
+                print('db_query authenticated successfully')
                 loggedin_user = User(user)
                 login_user(loggedin_user)
                 return '/sales_dashboard', False
             else:
-                print('user not authenticated successfully')
+                print('db_query not authenticated successfully')
                 return '/', True
         else:
             return '/', True

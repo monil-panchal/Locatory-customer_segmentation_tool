@@ -3,7 +3,7 @@ import os
 import dash
 from flask_login import LoginManager, UserMixin
 
-from apps.user.user import AppUser
+from apps.db_query.user import AppUser
 from dash import dash
 import dash_bootstrap_components as dbc
 import dash_html_components as html
@@ -42,7 +42,7 @@ class User(UserMixin):
         return str(object_id)
 
 
-# callback to reload the user object
+# callback to reload the db_query object
 @login_manager.user_loader
 def load_user(user_id):
     user_json = AppUser().get_customer_data(user_id)

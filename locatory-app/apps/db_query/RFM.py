@@ -1,5 +1,5 @@
 from apps.config.constants import RFM_API_CREDENTIALS, CURRENT_ENV
-from apps.user.custom_segmentation_params import SegmentationParameters
+from apps.db_query.custom_segmentation_params import SegmentationParameters
 import requests
 import json
 import timeit
