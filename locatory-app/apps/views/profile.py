@@ -1,11 +1,14 @@
+import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
-import dash_bootstrap_components as dbc
-from dash.dependencies import Input, Output, State
-
-from app import app, User
+from dash.dependencies import Input, Output
 from flask_login import current_user
 
+from app import app
+
+"""
+This is the main UI component for showing the user details 
+"""
 layout = dbc.Container([
     html.Br(),
     dbc.Container([
@@ -31,17 +34,12 @@ layout = dbc.Container([
     ], className='jumbotron')
 ])
 
+"""
+This callback is used for showing the current user details 
+"""
 @app.callback(
-    Output('username', 'children'),
+    [Output('username', 'children'),
+     Output('email', 'children')],
     [Input('page-content', 'children')])
-def currentUserName(pageContent):
-    print(f'current_user: {current_user}')
-    print(f'current_user.get_id(): {current_user.get_id()}')
-    return current_user.get_id()
-
-
-@app.callback(
-    Output('email', 'children'),
-    [Input('page-content', 'children')])
-def currentUserEmail(pageContent):
-    return current_user.get_id()
+def display_current_user_details(page_content):
+    return current_user.get_id(), current_user.get_id()
