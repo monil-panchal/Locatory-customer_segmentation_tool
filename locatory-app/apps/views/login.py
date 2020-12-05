@@ -8,6 +8,9 @@ from werkzeug.security import check_password_hash
 from app import app, User
 from apps.db_query.user import AppUser
 
+"""
+This is the main UI component for user login page
+"""
 layout = dbc.Container([
     html.Br(),
     dbc.Container([
@@ -58,14 +61,15 @@ layout = dbc.Container([
     ], className='jumbotron')
 ])
 
-
+"""
+This callback is used for user authentication and login
+"""
 @app.callback([Output('urlLogin', 'pathname'),
                Output("error-toast", "is_open")],
               [Input('loginButton', 'n_clicks')],
               [State('usernameBox', 'value'),
-               State('passwordBox', 'value')]
-              )
-def success(n_clicks, username, password):
+               State('passwordBox', 'value')])
+def user_authentication(n_clicks, username, password):
     if n_clicks < 0:
         return '/', None
 

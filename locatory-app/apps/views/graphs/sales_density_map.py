@@ -5,7 +5,9 @@ mapbox_access_token = 'pk.eyJ1IjoiYWhzLXZhIiwiYSI6ImNraGsyMWVmdDByOWszNnNkdzJqcH
 
 px.set_mapbox_access_token(mapbox_access_token)
 
-
+"""
+This function generated density map based on sales revenue
+"""
 def generate_density_map(current_df: pd.DataFrame):
     df = current_df.copy()
     df['lat-lng'] = current_df['customer.address.co_ordinate.coordinates']

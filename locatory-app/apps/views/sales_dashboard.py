@@ -1,21 +1,24 @@
-import asyncio
-# import cards as cards
-import dash
-import datetime as dt
-import pandas as pd
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
+import pandas as pd
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-from apps.db_query.sales import Sales
 
 from app import app
+from apps.dataframe.process_sales_dashboard_df import add_month_week
+from apps.db_query.sales import Sales
 from apps.views.graphs.sales_bar_graph import generate_bar_graph_by_orders, generate_bar_graph_by_sales
-from apps.views.graphs.sales_pie_chart import generate_pie_chart_by_location, generate_pie_chart_by_product_category
-from apps.dataframe.process_sales_dashboard_df import add_year_month_week
 from apps.views.graphs.sales_density_map import generate_density_map
+from apps.views.graphs.sales_pie_chart import generate_pie_chart_by_location, generate_pie_chart_by_product_category
 
+"""
+This is the main Python file for the sales dashboard
+"""
+
+"""
+These global variables are required to allow interactions between the functions and callbacks based on events.
+"""
 time_line = {}
 geo_data = {}
 dashboard_data_stat = {}
@@ -23,7 +26,42 @@ current_df = pd.DataFrame
 previous_df = pd.DataFrame
 
 
+def fetch_timelines() -> object:
+    """
+    This method fetches the timeline data from DB to show in the UI timeline filter
+
+    :return: object
+    """
+    global time_line
+    time_line = Sales().fetch_timeline()
+    time_line = dict(sorted(time_line.items(), reverse=True))
+
+    for k, v in time_line.items():
+        time_line[k] = sorted(time_line[k])
+
+    print(f'time retrieved from db: {time_line} ')
+    return time_line
+
+
+def fetch_geo_info() -> object:
+    """
+    This method fetches the geo location data from DB to show in the UI geo filter
+
+    :return: object
+    """
+    global geo_data
+    geo_data = Sales().fetch_geo_info()
+    return geo_data
+
+
 def process_current_dashboard_data(filter_data_options: dict, sales_dashboard_df: pd.DataFrame):
+    """
+    This method processes the dataframe based on the selected filters from the UI, and generates UI related data
+
+    :param filter_data_options: This dictionary contains the selected filter options from the UI
+    :param sales_dashboard_df: This is the dataframe generated from the DB data
+
+    """
     global dashboard_data_stat
     if not sales_dashboard_df.empty:
         global current_df
@@ -43,7 +81,8 @@ def process_current_dashboard_data(filter_data_options: dict, sales_dashboard_df
         current_df = current_df.reset_index(drop=True)
         previous_df = previous_df.reset_index(drop=True)
 
-        current_df, previous_df = add_year_month_week(current_df, previous_df)
+        current_df = add_month_week(current_df, 'order_date')
+        previous_df = add_month_week(previous_df, 'order_date')
 
         total_orders = current_df.shape[0]
         dashboard_data_stat['total_orders'] = total_orders
@@ -66,25 +105,15 @@ def process_current_dashboard_data(filter_data_options: dict, sales_dashboard_df
         pass
 
 
-def fetch_timelines():
-    global time_line
-    time_line = Sales().fetch_timeline()
-    time_line = dict(sorted(time_line.items(), reverse=True))
-
-    for k, v in time_line.items():
-        time_line[k] = sorted(time_line[k])
-
-    print(f'time retrieved from db: {time_line} ')
-    return time_line
-
-
-def fetch_geo_info():
-    global geo_data
-    geo_data = Sales().fetch_geo_info()
-    return geo_data
-
-
 def calculate_previous_timeline_data(data: dict):
+    """
+
+    This method calculates the previous timeline data based on the current timeline filters.
+    This includes calculating the previous year and months
+
+    :param data: dictionary which contains selected filters from UI
+    :return: data
+    """
     print(f'data in fetch_previous_dashboard_data: {data}')
     """
     Previous year data fetching logic
@@ -122,14 +151,18 @@ def calculate_previous_timeline_data(data: dict):
     return data
 
 
-def fetch_current_dashboard_data(data: dict):
-    data = calculate_previous_timeline_data(data)
-    print(f'updated data dict: {data}')
+def fetch_order_data(data: dict):
+    """
+    This method fetches the order data from the database based on the selected filters from the UI.
+    It also calls the pre-processing methods based on the selected data for showing the dashboard data.
 
+    :param data: dictionary which contains selected filters from UI
+    :return: data
+    """
+    data = calculate_previous_timeline_data(data)
     sales_dashboard_data = Sales().get_orders_for_dashboard(data)
 
     global current_df
-    # current_df = pd.DataFrame(sales_dashboard_data)
     current_df = pd.json_normalize(sales_dashboard_data)
     process_current_dashboard_data(data, current_df)
 
@@ -212,9 +245,9 @@ card_dashboard_bar_graphs = dbc.CardDeck(
 )
 
 """
-Card deck for bar chart visualization
+Card deck for pie chart visualization
 """
-card_dashboard_pie_graphs = dbc.CardDeck(
+card_dashboard_pie_charts = dbc.CardDeck(
     [
         dbc.Card(
             dbc.CardBody(
@@ -234,7 +267,7 @@ card_dashboard_pie_graphs = dbc.CardDeck(
 )
 
 """
-Card deck for bar chart visualization
+Card deck for density heatmap visualization
 """
 card_dashboard_map = dbc.CardDeck(
     [
@@ -249,7 +282,10 @@ card_dashboard_map = dbc.CardDeck(
     ]
 )
 
-card_content_1 = [
+"""
+Card for timeline filter
+"""
+card_timeline_filter = [
     dbc.CardHeader("Filter by timeline"),
     dbc.CardBody(
         [
@@ -270,7 +306,10 @@ card_content_1 = [
 
 ]
 
-card_content_2 = [
+"""
+Card for geo filter
+"""
+card_geo_filter = [
     dbc.CardHeader("Filter by region"),
     dbc.CardBody(
         [
@@ -298,6 +337,9 @@ card_content_2 = [
     )
 ]
 
+"""
+Card for header
+"""
 card_sales_dashboard = [
     dbc.CardHeader("sales Dashboard"),
     dbc.CardBody(
@@ -305,9 +347,12 @@ card_sales_dashboard = [
             html.Div(id='sales_dashboard')
         ]
     ),
-
 ]
 
+"""
+Main HTML div for showing the UI components
+This uses the bootstrap cards created above
+"""
 layout = html.Div([
     html.Div(id='output', hidden=True),
     html.Div(id='sales_dashboard', hidden=True),
@@ -316,8 +361,8 @@ layout = html.Div([
     dbc.Row([
         dbc.Col([
             html.Div([
-                dbc.Card(card_content_1, ),
-                dbc.Card(card_content_2, ),
+                dbc.Card(card_timeline_filter, ),
+                dbc.Card(card_geo_filter, ),
 
             ], id='menu', style={'position': 'sticky', 'top': '0'}),
         ], width='2'),
@@ -342,7 +387,7 @@ layout = html.Div([
             dbc.Row([
                 dbc.Col([
                     html.Div(children=[
-                        card_dashboard_pie_graphs
+                        card_dashboard_pie_charts
                     ], id='graph_pie')
                 ]),
             ]),
@@ -364,23 +409,21 @@ layout = html.Div([
         dismissable=True,
         icon="danger",
         duration=5000,
-        style={"position": "fixed", "top": '20%', "left": '35%', "width": '25%'},
+        style={"position": "fixed", "top": '18%', "left": '40%', "width": '25%'},
     ),
 ])
 
-
+"""
+This callback is used during the page load
+"""
 @app.callback([Output('output', 'children'),
                Output('year-selector', 'options'),
                Output('country-selector', 'options')],
               [Input('url', 'href')])
 def display_page(href):
-    print(f'href is:{href}')
-    print('Called on page loading via url in sales')
     if href is not None and 'sales_dashboard' in href:
-        print('loading sales dashboard data')
         geo_data = fetch_geo_info()
         time_line = fetch_timelines()
-
         countries = []
         for i in geo_data:
             countries.append(i['_id'])
@@ -390,46 +433,52 @@ def display_page(href):
                [{'label': i, 'value': i} for i in countries]
 
     else:
-        print('hiding sales dashboard data')
         raise PreventUpdate
 
 
+"""
+This callback is used when the year is selected from the timeline filter. 
+The output is specific months stored in the selected year
+"""
 @app.callback(Output('month-selector', 'options'),
               Input('year-selector', 'value'))
 def display_timeline_data(year):
     if year is not None:
         months = time_line[year]
         return [{'label': i, 'value': i} for i in sorted(months)]
-
     else:
         return []
 
 
+"""
+This callback is used when the country is selected from the geo filter. 
+The output is specific states/provinces stored in the selected country
+"""
 @app.callback(Output('state-selector', 'options'),
               Input('country-selector', 'value'))
 def display_geo_data_states(country):
     if country is not None:
-
         state_list = []
         for x in geo_data:
             if x['_id'] == country:
                 states = x['States']
                 for s in states:
                     state_list.append(s['state'])
-
         return [{'label': i, 'value': i} for i in sorted(state_list)]
-
     else:
         return []
 
 
+"""
+This callback is used when the country and state is selected from the geo filter. 
+The output is specific cities stored in the selected country and state.
+"""
 @app.callback(Output('city-selector', 'options'),
               [Input('country-selector', 'value'),
                Input('state-selector', 'value')
                ])
 def display_geo_data_cities(country, state):
     if not None in [country, state]:
-
         city_list = []
         for x in geo_data:
             if x['_id'] == country:
@@ -441,11 +490,13 @@ def display_geo_data_cities(country, state):
                             city_list.append(c['City'])
 
         return [{'label': i, 'value': i} for i in sorted(city_list)]
-
     else:
         return []
 
 
+"""
+This callback is used for showing all the visualizations based on the selected timeline and geo filters. 
+"""
 @app.callback(
     [Output("sales-error-toast", "is_open"),
      Output('sales_dashboard', 'children'),
@@ -465,17 +516,9 @@ def display_geo_data_cities(country, state):
      State('country-selector', 'value'),
      State('state-selector', 'value'),
      State('city-selector', 'value')])
-def submit_dashboard_request(n_clicks, year, month, country, state, city):
-    print(n_clicks)
+def display_visualizations(n_clicks, year, month, country, state, city):
     if n_clicks is not None and int(n_clicks) > 0:
-        print(f'selected year is: {year}')
-        print(f'selected month is: {month}')
-        print(f'selected country is: {country}')
-        print(f'selected state is: {state}')
-        print(f'selected city is: {city}')
-
         if not None in [year, country]:
-            print('calling fetch sales data call')
 
             data = {
                 'year': year,
@@ -485,7 +528,7 @@ def submit_dashboard_request(n_clicks, year, month, country, state, city):
                 'city': city
             }
 
-            data = fetch_current_dashboard_data(data)
+            data = fetch_order_data(data)
 
             if not (current_df.empty or previous_df.empty):
                 if data.get('prev_month'):
@@ -526,7 +569,6 @@ def submit_dashboard_request(n_clicks, year, month, country, state, city):
                    bar_graph_by_sales, pie_chart_by_location, pie_chart_by_item_category, map_sales
 
         else:
-            print('Year and country should not be emtpy for fetching dashboard data')
             return True, None, None, None, None, None, None, {}, {}, {}, {}, {}
     else:
         return None, None, None, None, None, None, None, {}, {}, {}, {}, {}

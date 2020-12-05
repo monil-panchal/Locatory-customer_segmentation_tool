@@ -1,16 +1,13 @@
 import pandas as pd
-import plotly.graph_objects as go
 import plotly.express as px
 
-
+"""
+This function generated pie chart based on revenue sales by location
+"""
 def generate_pie_chart_by_location(current_df: pd.DataFrame, type: str):
     df = current_df.copy()
     highest_payment_val = (df['payment_value'].max()) / 4
-
-    # df = current_df.nlargest(10, 'payment_value').copy()
-
     fig = px.pie()
-    print(f'pie chart type is: {type}')
 
     if type == 'country':
         df.loc[df['payment_value'] < highest_payment_val, 'customer.address.customer_state'] = 'Other states'
@@ -36,8 +33,10 @@ def generate_pie_chart_by_location(current_df: pd.DataFrame, type: str):
     return fig
 
 
+"""
+This function generated pie chart based on revenue sales by product category
+"""
 def generate_pie_chart_by_product_category(current_df: pd.DataFrame):
-    # df = current_df.nlargest(10, 'payment_value').copy()
     df = current_df.copy()
     highest_payment_val = (df['payment_value'].max()) / 4
     df.loc[df['payment_value'] < highest_payment_val, 'product.category'] = 'Other products'

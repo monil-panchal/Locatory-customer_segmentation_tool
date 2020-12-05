@@ -1,11 +1,12 @@
 import pandas as pd
 import plotly.graph_objects as go
-import datetime as dt
 
 
+"""
+This function generated bar graph based on number of orders
+"""
 def generate_bar_graph_by_orders(current_df: pd.DataFrame, prev_df: pd.DataFrame, type: str):
     fig = go.Figure()
-    # show month wise data for selected year
 
     current_year = current_df['order_date'].dt.year.iloc[0]
     current_month = current_df['month'].iloc[0]
@@ -14,10 +15,8 @@ def generate_bar_graph_by_orders(current_df: pd.DataFrame, prev_df: pd.DataFrame
     prev_month = prev_df['month'].iloc[0]
 
     if type == 'year':
-
         if not current_df.empty:
             current_month_orders = current_df.groupby(['month'], sort=False).size().reset_index(name='orders')
-
             fig.add_trace(go.Bar(
                 x=current_month_orders['month'],
                 y=current_month_orders['orders'],
@@ -27,7 +26,6 @@ def generate_bar_graph_by_orders(current_df: pd.DataFrame, prev_df: pd.DataFrame
 
         if not prev_df.empty:
             previous_month_orders = prev_df.groupby(['month'], sort=False).size().reset_index(name='orders')
-
             fig.add_trace(go.Bar(
                 x=previous_month_orders['month'],
                 y=previous_month_orders['orders'],
@@ -39,7 +37,6 @@ def generate_bar_graph_by_orders(current_df: pd.DataFrame, prev_df: pd.DataFrame
         fig.update_layout(xaxis_title='Months', )
 
     else:
-
         if not current_df.empty:
             current_week_orders = current_df.groupby(['week']).size().reset_index(name='orders')
             current_week_orders = current_week_orders.sort_values(by=['week'])
@@ -48,7 +45,6 @@ def generate_bar_graph_by_orders(current_df: pd.DataFrame, prev_df: pd.DataFrame
                 x=current_week_orders['week'],
                 y=current_week_orders['orders'],
                 name=str(current_month) + ' - ' + str(current_year),
-
                 marker_color='rgb(55, 83, 109)'
             ))
 
@@ -77,7 +73,9 @@ def generate_bar_graph_by_orders(current_df: pd.DataFrame, prev_df: pd.DataFrame
 
     return fig
 
-
+"""
+This function generated bar graph based on sales revenue
+"""
 def generate_bar_graph_by_sales(current_df: pd.DataFrame, prev_df: pd.DataFrame, type: str):
     fig = go.Figure()
     # show month wise data for selected year
