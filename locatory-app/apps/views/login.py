@@ -3,6 +3,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
 from flask_login import login_user
+from werkzeug.security import check_password_hash
 
 from app import app, User
 from apps.db_query.user import AppUser
@@ -71,7 +72,7 @@ def success(n_clicks, username, password):
     if None not in (username, password):
         user = AppUser().get_customer_data(username=username)
         if user:
-            if password == user['password']:
+            if check_password_hash(user['password'], password):
                 print('db_query authenticated successfully')
                 loggedin_user = User(user)
                 login_user(loggedin_user)
