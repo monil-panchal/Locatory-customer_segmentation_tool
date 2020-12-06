@@ -1,18 +1,16 @@
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
-import pandas as pd
 import plotly.graph_objects as go
 import flask
 from flask import Response
-from io import StringIO
-from apps.db_query.customer import Customer
-from dash.dependencies import Input, Output, State
+from apps.db.dao.customer_dao import Customer
+from dash.dependencies import Input, Output
 from app import app, server
 from apps.config.constants import brazil_state_code_map, mapbox_access_token
 
 select_country_div = html.Div([
-    html.Label(["Select Country",
+    html.Label(["Country",
                 dcc.Checklist(
                     id="country_checkbox",
                     options=[
@@ -28,7 +26,7 @@ select_country_div = html.Div([
 ])
 
 select_state_div = html.Div([
-    html.Label(["Select State",
+    html.Label(["State",
                 dcc.Dropdown(
                     id="state_dropdown",
                     options=[
@@ -43,7 +41,7 @@ select_state_div = html.Div([
 ])
 
 select_city_div = html.Div([
-    html.Label(["Select City",
+    html.Label(["City",
                 dcc.Dropdown(
                     id="city_dropdown",
                     options=[
@@ -57,7 +55,7 @@ select_city_div = html.Div([
 ])
 
 select_gender_div = html.Div([
-    html.Label(["Select Gender",
+    html.Label(["Gender",
                 dcc.Checklist(
                     id="gender_checkbox",
                     options=[
@@ -72,7 +70,7 @@ select_gender_div = html.Div([
 ])
 
 select_age_range_div = html.Div([
-    html.Label(["Select Age",
+    html.Label(["Age",
                 dcc.RangeSlider(
                     id='age-range-slider',
                     step=1,
@@ -87,7 +85,7 @@ select_age_range_div = html.Div([
 ])
 
 select_income_range_div = html.Div([
-    html.Label(["Select Income Range",
+    html.Label(["Income Range",
                 dcc.RangeSlider(
                     id='income-range-slider',
                     step=1000,
@@ -204,14 +202,14 @@ def show_hide_demographic_filters_element(click_value):
     Output('output-container-range-slider-age', 'children'),
     [Input('age-range-slider', 'value')])
 def update_age_range_div(value):
-    return 'Selected Age Range "{}"'.format(value)
+    return 'Age Range "{}"'.format(value)
 
 
 @app.callback(
     Output('output-container-range-slider-income', 'children'),
     [Input('income-range-slider', 'value')])
 def update_income_range_div(value):
-    return 'Selected Income Range: "{}"'.format(value)
+    return 'Income Range: "{}"'.format(value)
 
 
 @app.callback(

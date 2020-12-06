@@ -2,9 +2,9 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
-from apps.db_query.customer import Customer
-from apps.rfm.rfm import RFMData
-from dash.dependencies import Output, Input, State
+from apps.db.dao.customer_dao import Customer
+from apps.model.rfm import RFMData
+from dash.dependencies import Output, Input
 import plotly.graph_objects as go
 from app import app, server
 import numpy as np
@@ -39,14 +39,14 @@ def fetch_object_id(href):
 
 def reduce_dataframe_on_dropdown_options(df, dropdown, column_name):
     """
-        This method condenses the dataframe based on given dropdown option and column name
+        This method condenses the data_preprocessor based on given dropdown option and column name
 
     """
 
     if not dropdown:
         current_df = df
     else:
-        # Condensing dataframe based on R value
+        # Condensing data_preprocessor based on R value
         current_df = df.loc[df[column_name].isin(dropdown)]
 
     return current_df
@@ -111,7 +111,7 @@ def generate_rfm_columns(customer_df, rfm_model):
         1) Maps the customers in customer data frame and RFM model
         2) Creates a new columns f with F-score values taken from the RFM model
         3) Creates a new column m with M-score values taken from the RFM model
-        4) Creates a new column rfm with RFM-label values taken from the RFM model
+        4) Creates a new column model with RFM-label values taken from the RFM model
 
     """
 
@@ -128,14 +128,14 @@ def generate_rfm_columns(customer_df, rfm_model):
 
         rfm_name = "segment_" + chr(65 + i)
         customer_df.loc[customer_df["customer_id"].isin(
-            rfm_model.loc[0][rfm_name]), 'rfm'] = chr(65 + i)
+            rfm_model.loc[0][rfm_name]), 'model'] = chr(65 + i)
 
     return customer_df
 
 
 def initialize_column_with_nan(customer_df, column_name):
     """
-            This method does initializes the column of a dataframe with nan
+            This method does initializes the column of a data_preprocessor with nan
 
     """
     # Initialize labels as 1
@@ -148,7 +148,7 @@ layout = html.Div([
     html.Div([
         dbc.Button('Demographic Filters', color='primary', block=True, id="demo_button"),
         html.Div([
-            html.Label(["Select State",
+            html.Label(["State",
                         dcc.Dropdown(
                             id="dropdown_state",
                             options=[
@@ -159,7 +159,7 @@ layout = html.Div([
                         ],
                        style={'height': '100%', 'width': '120%', 'display': 'none'}, id="dropdown_state_component"
                        ),
-            html.Label(["Select City",
+            html.Label(["City",
                         dcc.Dropdown(
                             id="dropdown_city",
                             options=[
@@ -170,7 +170,7 @@ layout = html.Div([
                         ],
                        style={'height': '100%', 'width': '120%', 'display': 'none'}, id="dropdown_city_component"
                        ),
-            html.Label(["Select Gender",
+            html.Label(["Gender",
                         dcc.Checklist(
                             id="checkbox_gender",
                             options=[
@@ -233,7 +233,7 @@ layout = html.Div([
                        id="dropdown_temporal_filter_component"
                        ),
 
-            html.Label(["Select R value",
+            html.Label(["Recency",
                         dcc.Dropdown(id="dropdown_r_filter", value=0,
                                      options=[{"label": "value: 1", "value": 1},
                                               {"label": "value: 2", "value": 2},
@@ -246,7 +246,7 @@ layout = html.Div([
                        style={'height': '100%', 'width': '120%', 'display': 'none'}, id="dropdown_r_filter_component"
                        ),
 
-            html.Label(["Select F value",
+            html.Label(["Frequency",
                         dcc.Dropdown(id="dropdown_f_filter", value=0, multi=True
                                      # , style={'color': 'blue', 'backgroundColor': 'blue'}
                                      ),
@@ -254,7 +254,7 @@ layout = html.Div([
                        style={'height': '100%', 'width': '120%', 'display': 'none'}, id="dropdown_f_filter_component"
                        ),
 
-            html.Label(["Select M value",
+            html.Label(["Monetary",
                         dcc.Dropdown(id="dropdown_m_filter", value=0, multi=True
                                      # , style={'color': 'blue', 'backgroundColor': 'blue'}
                                      ),
@@ -421,23 +421,23 @@ def update_fig(dropdown_temporal_filter, dropdown_r_filter, dropdown_f_filter, d
                                        dropdown_m_filter, dropdown_state, dropdown_city,
                                        checkbox_gender, object_id)
 
-        # Create rfm object
+        # Create model object
         rfm = RFMData()
 
         # Should make a call in maps not here
         rfm_model = pd.DataFrame(rfm.get_records(object_id))
 
-        # Get customers data and append r, f, m, and rfm
+        # Get customers data and append r, f, m, and model
         customer = Customer()
 
         # Get customer data
         customer_df = pd.DataFrame(customer.get_customer_data())
 
-        # Initialize rfm columns with nan
+        # Initialize model columns with nan
         customer_df = initialize_column_with_nan(customer_df, "r")
         customer_df = initialize_column_with_nan(customer_df, "f")
         customer_df = initialize_column_with_nan(customer_df, "m")
-        customer_df = initialize_column_with_nan(customer_df, "rfm")
+        customer_df = initialize_column_with_nan(customer_df, "model")
 
         # Retrieve that particular row
         rfm_model = rfm_model.iloc[[dropdown_temporal_filter]]
@@ -446,40 +446,40 @@ def update_fig(dropdown_temporal_filter, dropdown_r_filter, dropdown_f_filter, d
         # Create a new column r with the r scores
         customer_df = generate_r_label(customer_df, rfm_model)
 
-        # Creates three new columns: 1) f with f scores 2) m with m scores 3) rfm column with combined rfm label values
+        # Creates three new columns: 1) f with f scores 2) m with m scores 3) model column with combined model label values
         customer_df = generate_rfm_columns(customer_df, rfm_model)
 
         # Remove customers with no label
-        customer_df = customer_df[customer_df['rfm'].notna()]
-        customer_df = customer_df.sort_values(by=["rfm"])
+        customer_df = customer_df[customer_df['model'].notna()]
+        customer_df = customer_df.sort_values(by=["model"])
         customer_df.reset_index(inplace=True)
 
         # Define a list of colors for each segment
         color_val = {'A': 'green', 'B': 'gray', 'C': 'blue', 'D': 'orange', 'E': 'yellow', 'F': 'brown', 'G': 'pink',
                      'H': 'purple', 'I': 'teal', 'J': 'red'}
 
-        # Reduce the dataframe based on R value
+        # Reduce the data_preprocessor based on R value
         current_df = reduce_dataframe_on_dropdown_options(customer_df, dropdown_r_filter, "r")
 
-        # Reduce the dataframe based on F value
+        # Reduce the data_preprocessor based on F value
         current_df = reduce_dataframe_on_dropdown_options(current_df, dropdown_f_filter, "f")
 
-        # Reduce the dataframe based on M value
+        # Reduce the data_preprocessor based on M value
         current_df = reduce_dataframe_on_dropdown_options(current_df, dropdown_m_filter, "m")
 
-        # Reduce the dataframe based on state value
+        # Reduce the data_preprocessor based on state value
         current_df = reduce_dataframe_on_dropdown_options(current_df, dropdown_state, "customer_state")
 
-        # Reduce the dataframe based on city value
+        # Reduce the data_preprocessor based on city value
         current_df = reduce_dataframe_on_dropdown_options(current_df, dropdown_city, "customer_city")
 
-        # Reduce the dataframe based on gender value
+        # Reduce the data_preprocessor based on gender value
         current_df = reduce_dataframe_on_dropdown_options(current_df, checkbox_gender, "gender")
 
         locations = []
-        for lbl in current_df['rfm'].unique():
+        for lbl in current_df['model'].unique():
             # Different classes
-            new_df = current_df.loc[current_df["rfm"] == lbl]
+            new_df = current_df.loc[current_df["model"] == lbl]
             current_trace_name = "Class-" + lbl + " " + str(len(new_df))
 
             locations.append(go.Scattermapbox(
@@ -539,23 +539,23 @@ def update_state_dropdown(dropdown_temporal_filter, dropdown_r_filter, dropdown_
         # Fetching object id from the href
         object_id = fetch_object_id(href)
 
-        # Create rfm object
+        # Create model object
         rfm = RFMData()
 
         # Should make a call in maps not here
         rfm_model = pd.DataFrame(rfm.get_records(object_id))
 
-        # Get customers data and append r, f, m, and rfm
+        # Get customers data and append r, f, m, and model
         customer = Customer()
 
         # Get customer data
         customer_df = pd.DataFrame(customer.get_customer_data())
 
-        # Initialize rfm columns with nan
+        # Initialize model columns with nan
         customer_df = initialize_column_with_nan(customer_df, "r")
         customer_df = initialize_column_with_nan(customer_df, "f")
         customer_df = initialize_column_with_nan(customer_df, "m")
-        customer_df = initialize_column_with_nan(customer_df, "rfm")
+        customer_df = initialize_column_with_nan(customer_df, "model")
 
         # Retrieve that particular row
         rfm_model = rfm_model.iloc[[dropdown_temporal_filter]]
@@ -564,21 +564,21 @@ def update_state_dropdown(dropdown_temporal_filter, dropdown_r_filter, dropdown_
         # Create a new column r with the r scores
         customer_df = generate_r_label(customer_df, rfm_model)
 
-        # Creates three new columns: 1) f with f scores 2) m with m scores 3) rfm column with combined rfm label values
+        # Creates three new columns: 1) f with f scores 2) m with m scores 3) model column with combined model label values
         customer_df = generate_rfm_columns(customer_df, rfm_model)
 
         # Remove customers with no label
-        customer_df = customer_df[customer_df['rfm'].notna()]
-        customer_df = customer_df.sort_values(by=["rfm"])
+        customer_df = customer_df[customer_df['model'].notna()]
+        customer_df = customer_df.sort_values(by=["model"])
         customer_df.reset_index(inplace=True)
 
-        # Reduce the dataframe based on R value
+        # Reduce the data_preprocessor based on R value
         current_df = reduce_dataframe_on_dropdown_options(customer_df, dropdown_r_filter, "r")
 
-        # Reduce the dataframe based on F value
+        # Reduce the data_preprocessor based on F value
         current_df = reduce_dataframe_on_dropdown_options(current_df, dropdown_f_filter, "f")
 
-        # Reduce the dataframe based on M value
+        # Reduce the data_preprocessor based on M value
         current_df = reduce_dataframe_on_dropdown_options(current_df, dropdown_m_filter, "m")
 
         # Based on current_df update return the state options
@@ -601,23 +601,23 @@ def update_city_dropdown(dropdown_state, dropdown_temporal_filter, dropdown_r_fi
         # Fetching object id from the href
         object_id = fetch_object_id(href)
 
-        # Create rfm object
+        # Create model object
         rfm = RFMData()
 
         # Should make a call in maps not here
         rfm_model = pd.DataFrame(rfm.get_records(object_id))
 
-        # Get customers data and append r, f, m, and rfm
+        # Get customers data and append r, f, m, and model
         customer = Customer()
 
         # Get customer data
         customer_df = pd.DataFrame(customer.get_customer_data())
 
-        # Initialize rfm columns with nan
+        # Initialize model columns with nan
         customer_df = initialize_column_with_nan(customer_df, "r")
         customer_df = initialize_column_with_nan(customer_df, "f")
         customer_df = initialize_column_with_nan(customer_df, "m")
-        customer_df = initialize_column_with_nan(customer_df, "rfm")
+        customer_df = initialize_column_with_nan(customer_df, "model")
 
         # Retrieve that particular row
         rfm_model = rfm_model.iloc[[dropdown_temporal_filter]]
@@ -626,24 +626,24 @@ def update_city_dropdown(dropdown_state, dropdown_temporal_filter, dropdown_r_fi
         # Create a new column r with the r scores
         customer_df = generate_r_label(customer_df, rfm_model)
 
-        # Creates three new columns: 1) f with f scores 2) m with m scores 3) rfm column with combined rfm label values
+        # Creates three new columns: 1) f with f scores 2) m with m scores 3) model column with combined model label values
         customer_df = generate_rfm_columns(customer_df, rfm_model)
 
         # Remove customers with no label
-        customer_df = customer_df[customer_df['rfm'].notna()]
-        customer_df = customer_df.sort_values(by=["rfm"])
+        customer_df = customer_df[customer_df['model'].notna()]
+        customer_df = customer_df.sort_values(by=["model"])
         customer_df.reset_index(inplace=True)
 
-        # Reduce the dataframe based on R value
+        # Reduce the data_preprocessor based on R value
         current_df = reduce_dataframe_on_dropdown_options(customer_df, dropdown_r_filter, "r")
 
-        # Reduce the dataframe based on F value
+        # Reduce the data_preprocessor based on F value
         current_df = reduce_dataframe_on_dropdown_options(current_df, dropdown_f_filter, "f")
 
-        # Reduce the dataframe based on M value
+        # Reduce the data_preprocessor based on M value
         current_df = reduce_dataframe_on_dropdown_options(current_df, dropdown_m_filter, "m")
 
-        # Now retrieve the states based on reduced dataframe
+        # Now retrieve the states based on reduced data_preprocessor
         if dropdown_state == 0 or dropdown_state is None or not dropdown_state:
             cities = current_df['customer_city'].unique()
         else:
@@ -667,23 +667,23 @@ def update_gender_checkbox(dropdown_temporal_filter, dropdown_r_filter, dropdown
         # Fetching object id from the href
         object_id = fetch_object_id(href)
 
-        # Create rfm object
+        # Create model object
         rfm = RFMData()
 
         # Should make a call in maps not here
         rfm_model = pd.DataFrame(rfm.get_records(object_id))
 
-        # Get customers data and append r, f, m, and rfm
+        # Get customers data and append r, f, m, and model
         customer = Customer()
 
         # Get customer data
         customer_df = pd.DataFrame(customer.get_customer_data())
 
-        # Initialize rfm columns with nan
+        # Initialize model columns with nan
         customer_df = initialize_column_with_nan(customer_df, "r")
         customer_df = initialize_column_with_nan(customer_df, "f")
         customer_df = initialize_column_with_nan(customer_df, "m")
-        customer_df = initialize_column_with_nan(customer_df, "rfm")
+        customer_df = initialize_column_with_nan(customer_df, "model")
 
         # Retrieve that particular row
         rfm_model = rfm_model.iloc[[dropdown_temporal_filter]]
@@ -692,27 +692,27 @@ def update_gender_checkbox(dropdown_temporal_filter, dropdown_r_filter, dropdown
         # Create a new column r with the r scores
         customer_df = generate_r_label(customer_df, rfm_model)
 
-        # Creates three new columns: 1) f with f scores 2) m with m scores 3) rfm column with combined rfm label values
+        # Creates three new columns: 1) f with f scores 2) m with m scores 3) model column with combined model label values
         customer_df = generate_rfm_columns(customer_df, rfm_model)
 
         # Remove customers with no label
-        customer_df = customer_df[customer_df['rfm'].notna()]
-        customer_df = customer_df.sort_values(by=["rfm"])
+        customer_df = customer_df[customer_df['model'].notna()]
+        customer_df = customer_df.sort_values(by=["model"])
         customer_df.reset_index(inplace=True)
 
-        # Reduce the dataframe based on R value
+        # Reduce the data_preprocessor based on R value
         current_df = reduce_dataframe_on_dropdown_options(customer_df, dropdown_r_filter, "r")
 
-        # Reduce the dataframe based on F value
+        # Reduce the data_preprocessor based on F value
         current_df = reduce_dataframe_on_dropdown_options(current_df, dropdown_f_filter, "f")
 
-        # Reduce the dataframe based on M value
+        # Reduce the data_preprocessor based on M value
         current_df = reduce_dataframe_on_dropdown_options(current_df, dropdown_m_filter, "m")
 
-        # Reduce the dataframe based on state value
+        # Reduce the data_preprocessor based on state value
         current_df = reduce_dataframe_on_dropdown_options(current_df, dropdown_state, "customer_state")
 
-        # Reduce the dataframe based on city value
+        # Reduce the data_preprocessor based on city value
         current_df = reduce_dataframe_on_dropdown_options(current_df, dropdown_city, "customer_city")
 
         gender_options = [{'label': key, 'value': key} for key in sorted(current_df['gender'].unique())]
@@ -732,23 +732,23 @@ def download_segmented_csv():
     f_value = flask.request.args.get('f_value').split(',')
     m_value = flask.request.args.get('m_value').split(',')
 
-    # Create rfm object
+    # Create model object
     rfm = RFMData()
 
     # Should make a call in maps not here
     rfm_model = pd.DataFrame(rfm.get_records(object_id))
 
-    # Get customers data and append r, f, m, and rfm
+    # Get customers data and append r, f, m, and model
     customer = Customer()
 
     # Get customer data
     customer_df = pd.DataFrame(customer.get_customer_data())
 
-    # Initialize rfm columns with nan
+    # Initialize model columns with nan
     customer_df = initialize_column_with_nan(customer_df, "r")
     customer_df = initialize_column_with_nan(customer_df, "f")
     customer_df = initialize_column_with_nan(customer_df, "m")
-    customer_df = initialize_column_with_nan(customer_df, "rfm")
+    customer_df = initialize_column_with_nan(customer_df, "model")
 
     # Retrieve that particular row
     rfm_model = rfm_model.iloc[[temporal_values]]
@@ -757,49 +757,49 @@ def download_segmented_csv():
     # Create a new column r with the r scores
     customer_df = generate_r_label(customer_df, rfm_model)
 
-    # Creates three new columns: 1) f with f scores 2) m with m scores 3) rfm column with combined rfm label values
+    # Creates three new columns: 1) f with f scores 2) m with m scores 3) model column with combined model label values
     customer_df = generate_rfm_columns(customer_df, rfm_model)
 
     # Remove customers with no label
-    customer_df = customer_df[customer_df['rfm'].notna()]
-    customer_df = customer_df.sort_values(by=["rfm"])
+    customer_df = customer_df[customer_df['model'].notna()]
+    customer_df = customer_df.sort_values(by=["model"])
     customer_df.reset_index(inplace=True)
 
     if not r_value or r_value == ['0']:
         current_df = customer_df
     else:
-        # Condensing dataframe based on R value
+        # Condensing data_preprocessor based on R value
         current_df = customer_df.loc[customer_df["r"].isin(r_value)]
 
     if not f_value or f_value == ['0']:
         current_df = current_df
     else:
-        # Condensing dataframe based on F value
+        # Condensing data_preprocessor based on F value
         current_df = current_df.loc[current_df["f"].isin(f_value)]
 
     if not m_value or m_value == ['0']:
         current_df = current_df
     else:
-        # Condensing dataframe based on M value
+        # Condensing data_preprocessor based on M value
         current_df = current_df.loc[current_df["m"].isin(m_value)]
 
     if not states or '' in states:
         current_df = current_df
     else:
-        # Condensing dataframe based on state value
+        # Condensing data_preprocessor based on state value
         current_df = current_df.loc[current_df["customer_state"].isin(
             states)]
 
     if not cities or '' in cities:
         current_df = current_df
     else:
-        # Condensing dataframe based on state value
+        # Condensing data_preprocessor based on state value
         current_df = current_df.loc[current_df["customer_city"].isin(cities)]
 
     if not gender_values or '' in gender_values:
         current_df = current_df
     else:
-        # Condensing dataframe based on gender value
+        # Condensing data_preprocessor based on gender value
         current_df = current_df.loc[current_df["gender"].isin(gender_values)]
 
     return Response(

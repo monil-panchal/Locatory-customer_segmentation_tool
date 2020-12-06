@@ -6,8 +6,8 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
 from app import app
-from apps.dataframe.process_sales_dashboard_df import add_month_week
-from apps.db_query.sales import Sales
+from apps.data_preprocessor.date_conversion import add_month_week
+from apps.db.dao.sales_dao import Sales
 from apps.views.graphs.sales_bar_graph import generate_bar_graph_by_orders, generate_bar_graph_by_sales
 from apps.views.graphs.sales_density_map import generate_density_map
 from apps.views.graphs.sales_pie_chart import generate_pie_chart_by_location, generate_pie_chart_by_product_category
@@ -56,10 +56,10 @@ def fetch_geo_info() -> object:
 
 def process_current_dashboard_data(filter_data_options: dict, sales_dashboard_df: pd.DataFrame):
     """
-    This method processes the dataframe based on the selected filters from the UI, and generates UI related data
+    This method processes the data_preprocessor based on the selected filters from the UI, and generates UI related data
 
     :param filter_data_options: This dictionary contains the selected filter options from the UI
-    :param sales_dashboard_df: This is the dataframe generated from the DB data
+    :param sales_dashboard_df: This is the data_preprocessor generated from the DB data
 
     """
     global dashboard_data_stat

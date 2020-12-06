@@ -1,17 +1,15 @@
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
-from dash import callback_context
 import pandas as pd
 import numpy as np
-import plotly.graph_objects as go
-from apps.db_query.customer import Customer
-from apps.db_query.custom_segmentation_params import SegmentationParameters
+from apps.db.dao.customer_dao import Customer
+from apps.db.dao.segmentation_params_dao import SegmentationParameters
 from apps.views.custom_segmentation_params_modal import CustomSegmentationParamsModal
 from dash.dependencies import Input, Output, State
 from app import app
-from apps.config.constants import brazil_state_code_map, mapbox_access_token
-from apps.db_query.RFM import RFM
+from apps.config.constants import brazil_state_code_map
+from apps.api_client.rfm_api_client import RFM
 
 @app.callback(
     Output('output-container-range-slider-age_modal', 'children'),

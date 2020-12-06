@@ -6,7 +6,7 @@ from flask_login import login_user
 from werkzeug.security import check_password_hash
 
 from app import app, User
-from apps.db_query.user import AppUser
+from apps.db.dao.user_dao import AppUser
 
 """
 This is the main UI component for user login page
@@ -77,12 +77,12 @@ def user_authentication(n_clicks, username, password):
         user = AppUser().get_customer_data(username=username)
         if user:
             if check_password_hash(user['password'], password):
-                print('db_query authenticated successfully')
+                print('dao authenticated successfully')
                 loggedin_user = User(user)
                 login_user(loggedin_user)
                 return '/sales_dashboard', False
             else:
-                print('db_query not authenticated successfully')
+                print('dao not authenticated successfully')
                 return '/', True
         else:
             return '/', True

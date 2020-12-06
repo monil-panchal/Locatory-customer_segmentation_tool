@@ -107,4 +107,4 @@ def navBar(input1):
 
 
 if __name__ == '__main__':
-    app.run_server(host='0.0.0.0', port=os.environ.get('PORT', 8080), debug=True)
+    app.run_server(host='0.0.0.0', port=os.environ.get('PORT', 8080))

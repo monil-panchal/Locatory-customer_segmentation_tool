@@ -2,7 +2,7 @@ import calendar
 import pandas as pd
 
 """
-This is a utility method for adding months and weeks as new columns in the existing dataframe based on the date field.
+This is a utility method for adding months and weeks as new columns in the existing data_preprocessor based on the date field.
 """
 
 
