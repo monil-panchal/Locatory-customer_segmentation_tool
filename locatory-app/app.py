@@ -1,17 +1,12 @@
+import logging
+import os
+
+from dash import dash
 from flask_login import LoginManager, UserMixin
 
 from apps.db.dao.user_dao import AppUser
-from dash import dash
-import os
-import pandas as pd
-import dash_core_components as dcc
-from dash.dependencies import Output, Input, State
-import plotly.graph_objects as go
-import dash_bootstrap_components as dbc
-import logging
 
 mapbox_access_token = 'pk.eyJ1IjoiYWhzLXZhIiwiYSI6ImNraGsyMWVmdDByOWszNnNkdzJqcHpwOWMifQ.llITOAaVvDUflVgenIPPlw'
-
 
 app = dash.Dash(__name__, suppress_callback_exceptions=True,
                 meta_tags=[{'name': 'viewport',
@@ -45,7 +40,6 @@ class User(UserMixin):
 def load_user(user_id):
     user_json = AppUser().get_customer_data(user_id)
     return User(user_json)
-
 
 
 @server.route('/hello')

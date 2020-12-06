@@ -1,10 +1,7 @@
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
-import pandas as pd
-import numpy as np
-import plotly.graph_objects as go
-from dash.dependencies import Input, Output, State
+
 
 class CustomSegmentationParamsModal:
 
@@ -99,7 +96,8 @@ class CustomSegmentationParamsModal:
     @staticmethod
     def get_modal_component_ids():
         # ids of components defined in the get_modal_elements()
-        modal_component_ids = ["custom_params_title", "input_segments", "input_data", "segment-segregator_modal", "gender_checkbox_modal",
+        modal_component_ids = ["custom_params_title", "input_segments", "input_data", "segment-segregator_modal",
+                               "gender_checkbox_modal",
                                "age-range-slider_modal", "income-range-slider_modal", "country_checkbox_modal",
                                "state_dropdown_modal", "city_dropdown_modal", "segmentation_algorithm_modal"]
         return modal_component_ids
@@ -111,7 +109,8 @@ class CustomSegmentationParamsModal:
             dbc.ModalBody([
                 html.Div(
                     [
-                        dbc.Input(id="custom_params_title", placeholder="Enter title of custom params", type="text", maxLength=200),
+                        dbc.Input(id="custom_params_title", placeholder="Enter title of custom params", type="text",
+                                  maxLength=200),
                         html.Br(),
                     ]
                 ),
