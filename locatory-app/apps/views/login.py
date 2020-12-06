@@ -3,27 +3,32 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
 from flask_login import login_user
-
+from werkzeug.security import check_password_hash
+from app import server
 from app import app, User
-from apps.user.user import AppUser
+from apps.db.dao.user_dao import AppUser
 
+"""
+This is the main UI component for user login page
+"""
 layout = dbc.Container([
     html.Br(),
     dbc.Container([
         dcc.Location(id='urlLogin', refresh=True),
         html.Div([
             dbc.Container(
-                html.Div(
-                    html.H3('Welcome to Locatory')
+                html.Img(
+                    src='/assets/locatory-logo-removebg-preview.png',
+                    className='center'
                 ),
-
             ),
+            html.Br(),
             dbc.Container(id='loginType', children=[
                 dcc.Input(
                     placeholder='Enter your username',
                     type='text',
                     id='usernameBox',
-                    className='form-control'
+                    className='form-control',
                 ),
                 html.Br(),
                 dcc.Input(
@@ -35,47 +40,51 @@ layout = dbc.Container([
                 html.Br(),
                 html.Button(
                     children='Login',
-                    n_clicks=0,
+                    n_clicks=-1,
                     type='submit',
                     id='loginButton',
                     className='btn btn-primary btn-lg'
                 ),
                 html.Br(),
-            ], className='form-group'),
-            dbc.Container(
-                html.Div(id='error'
-                         ),
+            ], className='center', style={'width': '51%'}),
+            dbc.Toast(
+                "Username or password is incorrect or empty",
+                id="error-toast",
+                header="Error while signing you in",
+                is_open=False,
+                dismissable=True,
+                icon="danger",
+                duration=5000,
+                style={"position": "fixed", "top": '5%', "left": '35%', "width": '25%'},
             ),
         ]),
     ], className='jumbotron')
 ])
 
-
+"""
+This callback is used for user authentication and login
+"""
 @app.callback([Output('urlLogin', 'pathname'),
-               Output('error', 'children')],
-              [Input('loginButton', 'n_clicks'),
-               Input('usernameBox', 'n_submit'),
-               Input('passwordBox', 'n_submit')],
+               Output("error-toast", "is_open")],
+              [Input('loginButton', 'n_clicks')],
               [State('usernameBox', 'value'),
-               State('passwordBox', 'value')]
-              )
-def success(n_clicks, usernameSubmit, passwordSubmit, username, password):
-    print('calling the callback')
-    print(f'username: {username}')
-    print(f'password: {password}')
+               State('passwordBox', 'value')])
+def user_authentication(n_clicks, username, password):
+    if n_clicks < 0:
+        return '/', None
+
     if None not in (username, password):
         user = AppUser().get_customer_data(username=username)
-        print(f'user from db: {user}')
         if user:
-            if password == user['password']:
-                print('user authenticated successfully')
+            if check_password_hash(user['password'], password):
+                server.logger.info(f"db_query authenticated successfully")
                 loggedin_user = User(user)
                 login_user(loggedin_user)
-                return '/map_dashboard', None
+                return '/sales_dashboard', False
             else:
-                print('user not authenticated successfully')
-                return '/', 'Please check your credentials'
+                server.logger.info(f"db_query not authenticated successfully")
+                return '/', True
         else:
-            return '/', 'Please check your credentials'
+            return '/', True
     else:
-        return '/', None
+        return '/', True
