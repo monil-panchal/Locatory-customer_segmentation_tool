@@ -4,7 +4,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output, State
 from flask_login import login_user
 from werkzeug.security import check_password_hash
-
+from app import server
 from app import app, User
 from apps.db.dao.user_dao import AppUser
 
@@ -77,12 +77,12 @@ def user_authentication(n_clicks, username, password):
         user = AppUser().get_customer_data(username=username)
         if user:
             if check_password_hash(user['password'], password):
-                print('dao authenticated successfully')
+                server.logger.info(f"db_query authenticated successfully")
                 loggedin_user = User(user)
                 login_user(loggedin_user)
                 return '/sales_dashboard', False
             else:
-                print('dao not authenticated successfully')
+                server.logger.info(f"db_query not authenticated successfully")
                 return '/', True
         else:
             return '/', True

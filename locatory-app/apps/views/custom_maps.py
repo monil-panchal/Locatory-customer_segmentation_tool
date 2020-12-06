@@ -10,7 +10,9 @@ from dash.dependencies import Input, Output, State
 from app import app
 from apps.config.constants import brazil_state_code_map
 from apps.api_client.rfm_api_client import RFM
+from app import server
 
+# callbacks for select filters present in modal
 @app.callback(
     Output('output-container-range-slider-age_modal', 'children'),
     [Input('age-range-slider_modal', 'value')])
@@ -49,6 +51,7 @@ def update_segment_seperator_text_modal(value):
         return "      ,        ".join(class_range_text)
     return ""
 
+# layout to show custom map list
 layout = dbc.Container([
             html.H2('Custom Maps List'),
             html.Hr(),
@@ -63,6 +66,7 @@ layout = dbc.Container([
             dbc.Col(html.Div(id='cards-content'),),
         ], className="mt-4")
 
+# callback to show modal for creating custom seg params
 @app.callback(
             Output("toast-message", "header"), Output("toast-message", "children"),
             Output("toast-message", "is_open"), Output('country_checkbox_modal', 'options'),
@@ -75,8 +79,7 @@ layout = dbc.Container([
     [State("modal", "is_open")] + [State(ele_id, "value") for ele_id in CustomSegmentationParamsModal.get_modal_component_ids()],
 )
 def toggle_modal(n1, create_button, is_open, *modal_component_states_args):
-    print('toggle_modal', n1, create_button, is_open, modal_component_states_args)
-
+    server.logger.info(f"toggle_modal: n1:{n1}, create_button:{create_button}, is_open:{is_open}, modal_component_states_args:{modal_component_states_args}")
     toast_message_header = ''
     toast_message_content = ''
     toast_message_open = False
@@ -118,7 +121,8 @@ def toggle_modal(n1, create_button, is_open, *modal_component_states_args):
             toast_message_content = f"Title '{custom_params_dict.get('custom_params_title')}' already exist."
 
         if toast_message_header != '':
-            print(toast_message_content)
+            server.logger.info(
+                f"toast_message_content: create_button:{toast_message_content}")
             toast_message_open = True
             return toast_message_header, toast_message_content, toast_message_open, \
                    country_checkbox_options, \
@@ -142,7 +146,8 @@ def toggle_modal(n1, create_button, is_open, *modal_component_states_args):
                     toast_message_content = "Custom params successfully created, but RFM segmentation was failed."
             toast_message_open = True
         except Exception as e:
-            print(e)
+            server.logger.info(
+                f"error in toggle modal while inserting custom params:{str(e)}")
 
     return toast_message_header, toast_message_content, toast_message_open, country_checkbox_options, \
            gender_checkbox_options, \
@@ -155,6 +160,7 @@ def toggle_modal(n1, create_button, is_open, *modal_component_states_args):
            income_range_slider_value, \
            income_range_slider_marks
 
+# modal filters
 def get_modal_filters():
     customer = Customer()
     customer_df = pd.DataFrame(customer.get_customer_data())
@@ -209,7 +215,7 @@ def update_city_modal_dropdown(value):
               [Input('url', 'href'), Input("open", "n_clicks"), Input("close", "n_clicks")],
               [State("modal", "is_open")])
 def display_custom_param_list_page(href, open, close, is_open):
-    print('display_custom_param_list_page',href, open, close, is_open)
+    server.logger.info(f"display_custom_param_list_page: href:{href}, open:{open}, close:{close}, is_open:{is_open}")
     cards_list = []
     if is_open is None and href is not None and 'custom_maps_list' == href.split('/')[-1]:
         cards_list = create_custom_params_card_list()
@@ -223,6 +229,7 @@ def display_custom_param_list_page(href, open, close, is_open):
 
     return cards_list, is_open
 
+# create cards to show list of custom params
 def create_custom_params_card_list():
     cards_list = []
     csp = SegmentationParameters()
@@ -310,10 +317,8 @@ def create_custom_params_card_list():
         ))
     return cards_list
 
-total_accordians = SegmentationParameters().total_count()
-
 # define callbacks for card accordions with ids collapse-{i}
-# print("total", SegmentationParameters().total_count())
+total_accordians = SegmentationParameters().total_count()
 for index in range(1, total_accordians+1000):
 
     @app.callback(
@@ -322,7 +327,7 @@ for index in range(1, total_accordians+1000):
         [State(f"collapse-{index}", "is_open")],
     )
     def toggle_collapse(n, is_open):
-        print('accordian', index, n, is_open)
+        # server.logger.info(f"accordian: index:{index}, n:{n}, is_open:{is_open}")
         if n:
             return not is_open
         return is_open

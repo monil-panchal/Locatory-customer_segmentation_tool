@@ -3,6 +3,7 @@ from apps.db.dao.segmentation_params_dao import SegmentationParameters
 import requests
 import json
 import timeit
+from app import server
 
 class RFM:
 
@@ -13,9 +14,9 @@ class RFM:
         try:
             response = requests.post(f"{RFM_API_CREDENTIALS[CURRENT_ENV].get('host')}token", data=auth_data)
             auth_token = response.json()
-            print(auth_token)
+            server.logger.into(f"get api auth token: {auth_token}")
         except Exception as e:
-            print(str(e))
+            server.logger.error(f"Error in get api auth token: {str(e)}")
         return auth_token
 
     def create_rfm_segmentation(self, seg_params_mongo_id):
@@ -30,17 +31,16 @@ class RFM:
                       'Authorization': 'Bearer ' + auth_token['access_token']}
             data = {"document_id": seg_params_mongo_id}
             start = timeit.default_timer()
-            print(f'header: {header}')
-            print(f'data: {data}')
-            
-            print(f"{RFM_API_CREDENTIALS[CURRENT_ENV].get('host')}rfm/rfm_segmentation_with_saved_data/")
+            server.logger.info(f"create rfm seg api call=> header:{header}, data:{data}, startTime: {start}")
+            server.logger.info(f"create RFM API endpoint: {RFM_API_CREDENTIALS[CURRENT_ENV].get('host')}rfm/rfm_segmentation_with_saved_data/")
             response = requests.post(f"{RFM_API_CREDENTIALS[CURRENT_ENV].get('host')}rfm/rfm_segmentation_with_saved_data/", data=json.dumps(data),
                                  headers=header)
-            print(response, response.json())
+            server.logger.info(f"create RFM api response: {response}")
             if response is not None and response.status_code == 200:
-                print(response.json())
+                server.logger.info(f"create RFM api json response: {response.json()}")
                 success = True
-            print(timeit.default_timer() - start)
+            server.logger.info(f"create rfm seg api call=> header:{header}, data:{data}, startTime: {timeit.default_timer() - start}")
         except Exception as e:
+            server.logger.info(f"error in create rfm seg api call=>{str(e)}")
             print(str(e))
         return success

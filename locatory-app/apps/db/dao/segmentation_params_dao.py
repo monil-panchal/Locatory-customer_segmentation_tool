@@ -1,13 +1,11 @@
 from apps.db.config.mongo_connection import PyMongo
 from bson.objectid import ObjectId
+from app import server
 
 class SegmentationParameters():
 
-    def __init__(self):
-        pass
-
     def fetch_all_params(self):
-        print("fetching custom seg params from mongodb")
+        server.logger.info("fetching custom seg params from mongodb")
         pymongoObj = PyMongo()
         db = pymongoObj.get_db_connection()
         custom_params = []
@@ -18,15 +16,15 @@ class SegmentationParameters():
         return custom_params
 
     def total_count(self):
-        print("fetching custom seg params from mongodb")
         pymongoObj = PyMongo()
         db = pymongoObj.get_db_connection()
         count = db.SegmentationParameters.count({})
         pymongoObj.close_db_connection()
+        server.logger.info(f"get custom seg params count from mongodb :{count}")
         return count
 
     def insert_custom_mapping(self, custom_mapping_dict):
-
+        server.logger.info(f"Inserting custom seg params: {custom_mapping_dict}")
         insert_dict = {}
         # mandatory params
         if custom_mapping_dict.get('input_segments') is not None and custom_mapping_dict.get('input_segments') >=3 and custom_mapping_dict.get('input_segments') <=10 :
@@ -67,8 +65,7 @@ class SegmentationParameters():
             insert_dict['geography']['city'] = custom_mapping_dict.pop('city_dropdown_modal')
 
         try:
-            print("inserting custom seg params to mongodb")
-            print(insert_dict)
+            server.logger.info(f"insert_dict custom seg params: {insert_dict}")
             pymongoObj = PyMongo()
             db = pymongoObj.get_db_connection()
             response = db.SegmentationParameters.insert_one(insert_dict)
@@ -76,10 +73,11 @@ class SegmentationParameters():
             if response is not None and response.acknowledged is True:
                 return str(response.inserted_id)
         except Exception as e:
-            print(e)
+            server.logger.error(f"Error in inserting custom seg params: {str(e)}")
             return False
 
     def is_attribute_exist(self, field_name, field_value):
+        server.logger.info(f"is_attribute_exist, field_name: {field_name}, field_value:{field_value}")
         pymongoObj = PyMongo()
         db = pymongoObj.get_db_connection()
         if field_name == '_id':

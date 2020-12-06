@@ -1,7 +1,7 @@
 from apps.db.config.mongo_connection import PyMongo
 from datetime import datetime
 import calendar
-
+from app import server
 
 class Sales:
 
@@ -69,8 +69,7 @@ class Sales:
         return list(cursor)
 
     def get_orders_for_dashboard(self, data: dict):
-
-        print(f'data received in db call: {data}')
+        server.logger.info(f"data received in db call: {data}")
 
         if data:
 
@@ -128,14 +127,14 @@ class Sales:
             dashboard_data_query = {
                 '$and': queries
             }
-            print(f'dashboard_data_query: {dashboard_data_query}')
+            server.logger.info(f"dashboard_data_query: {dashboard_data_query}")
 
             orders = []
             cursor = db.Orders.find(dashboard_data_query)
             for order in cursor:
                 orders.append(order)
 
-            print(f'number of orders retrieved are: {len(orders)}')
+            server.logger.info(f"number of orders retrieved are: {len(orders)}")
             pymongoObj.close_db_connection()
             return orders
 

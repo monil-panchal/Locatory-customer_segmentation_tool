@@ -21,7 +21,5 @@ class PyMongo:
 
     def close_db_connection(self):
         if self.client is not None:
-            try:
-                self.client.close()
-            except Exception as e:
-                print(e)
+            self.client.close()
+

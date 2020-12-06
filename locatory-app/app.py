@@ -3,6 +3,12 @@ from flask_login import LoginManager, UserMixin
 from apps.db.dao.user_dao import AppUser
 from dash import dash
 import os
+import pandas as pd
+import dash_core_components as dcc
+from dash.dependencies import Output, Input, State
+import plotly.graph_objects as go
+import dash_bootstrap_components as dbc
+import logging
 
 mapbox_access_token = 'pk.eyJ1IjoiYWhzLXZhIiwiYSI6ImNraGsyMWVmdDByOWszNnNkdzJqcHpwOWMifQ.llITOAaVvDUflVgenIPPlw'
 
@@ -16,6 +22,7 @@ server = app.server
 server.config.update(
     SECRET_KEY=os.urandom(12)
 )
+server.logger.setLevel(logging.INFO)
 
 # LoginManager
 login_manager = LoginManager()

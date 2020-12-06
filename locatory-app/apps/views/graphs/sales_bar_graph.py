@@ -1,6 +1,6 @@
 import pandas as pd
 import plotly.graph_objects as go
-
+from app import server
 
 """
 This function generated bar graph based on number of orders
@@ -132,7 +132,7 @@ def generate_bar_graph_by_sales(current_df: pd.DataFrame, prev_df: pd.DataFrame,
             prev_df_sales = prev_df[['week', 'payment_value']].copy()
             previous_week_orders = prev_df_sales.groupby(['week']).sum().reset_index()
             previous_week_orders = previous_week_orders.sort_values(by=['week'])
-            print(f'previous_week_orders: {previous_week_orders}')
+            server.logger.info(f"previous_week_orders: {previous_week_orders}")
 
             fig.add_trace(go.Bar(
                 x=previous_week_orders['week'],
