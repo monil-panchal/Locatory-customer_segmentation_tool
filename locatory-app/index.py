@@ -6,7 +6,7 @@ from dash.dependencies import Input, Output
 from flask_login import current_user, logout_user
 
 from app import app
-from apps.views import login, map_dashboard, other_dashboard, profile, sales_dashboard, custom_maps
+from apps.views import login, map_dashboard, rfm_dashboard, profile, sales_dashboard, custom_maps
 
 server = app.server
 
@@ -47,9 +47,9 @@ def display_page(pathname):
         else:
             return login.layout
 
-    if pathname == '/other_dashboard':
+    if pathname == '/rfm_dashboard':
         if current_user.is_authenticated:
-            return other_dashboard.layout
+            return rfm_dashboard.layout
         else:
             return login.layout
 
@@ -86,7 +86,7 @@ def navBar(input1):
             dbc.NavLink('Demographic-Geographic Segmentation',
                         href='/map_dashboard', style={"color": "orange"}),
             dbc.NavLink('Default Combined Segmentation',
-                        href='/other_dashboard', style={"color": "orange"}),
+                        href='/rfm_dashboard', style={"color": "orange"}),
             dbc.NavLink('Custom Combined Segmentation',
                         href='/custom_maps_list', style={"color": "orange"}),
             dbc.DropdownMenu(

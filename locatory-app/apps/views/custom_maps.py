@@ -290,7 +290,7 @@ def create_custom_params_card_list():
                 ))
 
         # card_body.append(dbc.Button("View", id=f"view-btn", color="primary"))
-        card_body.append(dcc.Link('View', href=f"/other_dashboard?id={str(params['_id'])}"))
+        card_body.append(dcc.Link('View', href=f"/rfm_dashboard?id={str(params['_id'])}"))
         cards_list.append(dbc.Card(
             [
                 dbc.CardHeader([
