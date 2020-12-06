@@ -1,4 +1,4 @@
-from apps.db.mongo_connection import PyMongo
+from apps.db.config.mongo_connection import PyMongo
 import pandas as pd
 
 class SingletonDecorator:

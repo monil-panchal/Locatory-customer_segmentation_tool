@@ -1,6 +1,4 @@
-from apps.db.mongo_connection import PyMongo
-import pandas as pd
-import numpy as np
+from apps.db.config.mongo_connection import PyMongo
 from bson.objectid import ObjectId
 
 class SegmentationParameters():
