@@ -5,7 +5,7 @@ import pandas as pd
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
-from app import app
+from app import app, server
 from apps.data_preprocessor.date_conversion import add_month_week
 from apps.db.dao.sales_dao import Sales
 from apps.views.graphs.sales_bar_graph import generate_bar_graph_by_orders, generate_bar_graph_by_sales
@@ -39,7 +39,7 @@ def fetch_timelines() -> object:
     for k, v in time_line.items():
         time_line[k] = sorted(time_line[k])
 
-    print(f'time retrieved from db: {time_line} ')
+    server.logger.info(f"time retrieved from db: {time_line} ")
     return time_line
 
 
@@ -114,7 +114,7 @@ def calculate_previous_timeline_data(data: dict):
     :param data: dictionary which contains selected filters from UI
     :return: data
     """
-    print(f'data in fetch_previous_dashboard_data: {data}')
+    server.logger.info(f"data in fetch_previous_dashboard_data: {data}")
     """
     Previous year data fetching logic
     """
@@ -128,24 +128,19 @@ def calculate_previous_timeline_data(data: dict):
         prev_month = data['month'] - 1
 
         if prev_month in time_line[current_year]:
-            print(
-                f'prev month: {prev_month} is in current year: {current_year} range')
+            server.logger.info(f'prev month: {prev_month} is in current year: {current_year} range')
             data['prev_month'] = prev_month
 
         else:
-            print(
-                f'prev month: {prev_month} is NOT in current year: {current_year} range. Fetching previous latest month')
+            server.logger.info(f'prev month: {prev_month} is NOT in current year: {current_year} range. Fetching previous latest month')
             prev_month = time_line[prev_year] and time_line[prev_year][-1] or 1
 
             data['prev_year'] = prev_year
             data['prev_month'] = prev_month
-
-            print(
-                f'latest previous month is: {prev_month} of the year: {prev_year}')
+            server.logger.info(f'latest previous month is: {prev_month} of the year: {prev_year}')
 
     else:
-        print(
-            f'No month is selected in the filter. Fetching data of the previous year: {prev_year}')
+        server.logger.info(f'No month is selected in the filter. Fetching data of the previous year: {prev_year}')
         data['prev_year'] = prev_year
 
     return data

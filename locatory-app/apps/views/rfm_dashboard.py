@@ -348,7 +348,6 @@ def set_dropdown(href):
         # Get list of end dates from MongoDB
         rfm = RFMData()
         end_dates_iso = rfm.get_all_end_dates(object_id)
-        # print(end_dates_iso)
 
         # Parse the end dates iso to get month and year
         period_values = []
@@ -371,7 +370,6 @@ def set_dropdown(href):
         dropdown_r_filter_values = [dict(label=x, value=int(list_key[i]))
                                     for i, x in enumerate(dropdown_labels)]
 
-        # print(dropdown_values)
         return dropdown_values, dropdown_r_filter_values
 
 
