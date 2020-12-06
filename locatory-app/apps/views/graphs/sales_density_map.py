@@ -1,7 +1,6 @@
 import pandas as pd
 import plotly.express as px
-
-mapbox_access_token = 'pk.eyJ1IjoiYWhzLXZhIiwiYSI6ImNraGsyMWVmdDByOWszNnNkdzJqcHpwOWMifQ.llITOAaVvDUflVgenIPPlw'
+from apps.config.constants import mapbox_access_token
 
 px.set_mapbox_access_token(mapbox_access_token)
 
