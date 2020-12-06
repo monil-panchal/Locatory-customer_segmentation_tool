@@ -31,7 +31,6 @@ class RFM():
 
     def merge_with_duration(self, rfm_df, end_date):
         # Calc Duration
-        # TODO: Check if Min_Date needs relpacing with start_date for old customers, check Mongo RFM query as well
         rfm_df['Duration_Days'] = (
             end_date - pd.to_datetime(rfm_df['First_Order_Date'], errors='coerce')).dt.days
 
@@ -43,7 +42,6 @@ class RFM():
 
     def set_recency_scores(self, df):
         # Recency score will always be in between 1 to 5
-        # TODO: Improve for different n_segments
         df.loc[(df["R"] <= 30), 'R_Score'] = 5
         df.loc[((df["R"] > 30) & (df["R"] <= 60)), 'R_Score'] = 4
         df.loc[((df["R"] > 60) & (df["R"] <= 90)), 'R_Score'] = 3

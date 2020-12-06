@@ -16,7 +16,7 @@ class Clustering:
         if Clustering.__instance__ is None:
             Clustering.__instance__ = self
         else:
-            raise Exception("You cannot create another Clustering Log class")
+            raise Exception("You cannot create another Clustering class")
 
     @staticmethod
     def get_instance():
