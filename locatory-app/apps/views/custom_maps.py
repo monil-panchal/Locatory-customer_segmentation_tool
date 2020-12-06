@@ -1,16 +1,18 @@
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
-import pandas as pd
 import numpy as np
+import pandas as pd
+from dash.dependencies import Input, Output, State
+
+from app import app
+from app import server
+from apps.api_client.rfm_api_client import RFM
+from apps.config.constants import brazil_state_code_map
 from apps.db.dao.customer_dao import Customer
 from apps.db.dao.segmentation_params_dao import SegmentationParameters
 from apps.views.custom_segmentation_params_modal import CustomSegmentationParamsModal
-from dash.dependencies import Input, Output, State
-from app import app
-from apps.config.constants import brazil_state_code_map
-from apps.api_client.rfm_api_client import RFM
-from app import server
+
 
 # callbacks for select filters present in modal
 @app.callback(
@@ -19,26 +21,29 @@ from app import server
 def update_age_range_div_modal(value):
     return 'Selected Age Range "{}"'.format(value)
 
+
 @app.callback(
     Output('output-container-range-slider-income_modal', 'children'),
     [Input('income-range-slider_modal', 'value')])
 def update_income_range_div_modal(value):
     return 'Selected Income Range: "{}"'.format(value)
 
+
 @app.callback(
     Output('segment-segregator_modal', 'value'), Output('segment-segregator_modal', 'pushable'),
     [Input('input_segments', 'value')])
 def update_segment_seperator_modal(value):
-    if value is None or value<3 or value>10:
+    if value is None or value < 3 or value > 10:
         return [], 0
     else:
-        return list(np.arange(0, 100, 100/int(value))), 5
+        return list(np.arange(0, 100, 100 / int(value))), 5
+
 
 @app.callback(
     Output('output-container-segment-segregator_modal', 'children'),
     [Input('segment-segregator_modal', 'value')])
 def update_segment_seperator_text_modal(value):
-    if len(value)>0 and len(value)<25:
+    if len(value) > 0 and len(value) < 25:
         classes = []
         for i in range(0, len(value)):
             classes.append(chr(ord('A') + i))
@@ -51,35 +56,39 @@ def update_segment_seperator_text_modal(value):
         return "      ,        ".join(class_range_text)
     return ""
 
+
 # layout to show custom map list
 layout = dbc.Container([
-            html.H2('Custom Maps List'),
-            html.Hr(),
-            dbc.Button("New custom segmentation params", id="open", color="success"),
-            html.Br(),
-            dbc.Modal(
-                CustomSegmentationParamsModal.get_modal_elements(),
-                id="modal",
-                size="xl",
-            ),
-            html.Br(),
-            dbc.Col(html.Div(id='cards-content'),),
-        ], className="mt-4")
+    html.H2('Custom Maps List'),
+    html.Hr(),
+    dbc.Button("New custom segmentation params", id="open", color="success"),
+    html.Br(),
+    dbc.Modal(
+        CustomSegmentationParamsModal.get_modal_elements(),
+        id="modal",
+        size="xl",
+    ),
+    html.Br(),
+    dbc.Col(html.Div(id='cards-content'), ),
+], className="mt-4")
+
 
 # callback to show modal for creating custom seg params
 @app.callback(
-            Output("toast-message", "header"), Output("toast-message", "children"),
-            Output("toast-message", "is_open"), Output('country_checkbox_modal', 'options'),
-            Output('gender_checkbox_modal', 'options'), Output('age-range-slider_modal', 'min'),
-            Output('age-range-slider_modal', 'max'), Output('age-range-slider_modal', 'value'),
-            Output('age-range-slider_modal', 'marks'), Output('income-range-slider_modal', 'min'),
-            Output('income-range-slider_modal', 'max'), Output('income-range-slider_modal', 'value'),
-            Output('income-range-slider_modal', 'marks'),
+    Output("toast-message", "header"), Output("toast-message", "children"),
+    Output("toast-message", "is_open"), Output('country_checkbox_modal', 'options'),
+    Output('gender_checkbox_modal', 'options'), Output('age-range-slider_modal', 'min'),
+    Output('age-range-slider_modal', 'max'), Output('age-range-slider_modal', 'value'),
+    Output('age-range-slider_modal', 'marks'), Output('income-range-slider_modal', 'min'),
+    Output('income-range-slider_modal', 'max'), Output('income-range-slider_modal', 'value'),
+    Output('income-range-slider_modal', 'marks'),
     [Input("open", "n_clicks"), Input("create", "n_clicks")],
-    [State("modal", "is_open")] + [State(ele_id, "value") for ele_id in CustomSegmentationParamsModal.get_modal_component_ids()],
+    [State("modal", "is_open")] + [State(ele_id, "value") for ele_id in
+                                   CustomSegmentationParamsModal.get_modal_component_ids()],
 )
 def toggle_modal(n1, create_button, is_open, *modal_component_states_args):
-    server.logger.info(f"toggle_modal: n1:{n1}, create_button:{create_button}, is_open:{is_open}, modal_component_states_args:{modal_component_states_args}")
+    server.logger.info(
+        f"toggle_modal: n1:{n1}, create_button:{create_button}, is_open:{is_open}, modal_component_states_args:{modal_component_states_args}")
     toast_message_header = ''
     toast_message_content = ''
     toast_message_open = False
@@ -98,22 +107,23 @@ def toggle_modal(n1, create_button, is_open, *modal_component_states_args):
     if is_open is True and create_button is not None:
         csp = SegmentationParameters()
         custom_params_dict = {}
-        for key,val in zip(CustomSegmentationParamsModal.get_modal_component_ids(), modal_component_states_args):
-            if key == 'segment-segregator_modal' and len(val)>0:
-                val[0]=0
+        for key, val in zip(CustomSegmentationParamsModal.get_modal_component_ids(), modal_component_states_args):
+            if key == 'segment-segregator_modal' and len(val) > 0:
+                val[0] = 0
                 custom_params_dict[key] = list(np.array(val) / 100)
                 continue
             custom_params_dict[key] = val
 
-        if custom_params_dict.get('input_data') is None or custom_params_dict.get('input_data')<1 \
-                or custom_params_dict.get('input_data')>24:
+        if custom_params_dict.get('input_data') is None or custom_params_dict.get('input_data') < 1 \
+                or custom_params_dict.get('input_data') > 24:
             toast_message_header = "Validation Error"
             toast_message_content = "Data period must be between 1 and 24"
         if custom_params_dict.get('input_segments') is None \
-                or custom_params_dict.get('input_segments')<3 or custom_params_dict.get('input_segments')>10:
+                or custom_params_dict.get('input_segments') < 3 or custom_params_dict.get('input_segments') > 10:
             toast_message_header = "Validation Error"
             toast_message_content = "No of segments must be between 3 and 10"
-        if custom_params_dict.get('custom_params_title') is None or custom_params_dict.get('custom_params_title').strip() == '' or len(custom_params_dict.get('custom_params_title')) > 200:
+        if custom_params_dict.get('custom_params_title') is None or custom_params_dict.get(
+                'custom_params_title').strip() == '' or len(custom_params_dict.get('custom_params_title')) > 200:
             toast_message_header = "Validation Error"
             toast_message_content = "Title can not be empty or more than 200 char long."
         elif csp.is_attribute_exist('title', custom_params_dict.get('custom_params_title')) is True:
@@ -160,6 +170,7 @@ def toggle_modal(n1, create_button, is_open, *modal_component_states_args):
            income_range_slider_value, \
            income_range_slider_marks
 
+
 # modal filters
 def get_modal_filters():
     customer = Customer()
@@ -177,19 +188,20 @@ def get_modal_filters():
     income_range_slider_marks = {int(key): {'label': f"{key}"} for key in
                                  range(0, customer_df['income'].max() + 1, 5000)}
     return country_checkbox_options, gender_checkbox_options, \
-    age_range_slider_min, \
-    age_range_slider_max, \
-    age_range_slider_value, \
-    age_range_slider_marks, \
-    income_range_slider_min, \
-    income_range_slider_max, \
-    income_range_slider_value, \
-    income_range_slider_marks
+           age_range_slider_min, \
+           age_range_slider_max, \
+           age_range_slider_value, \
+           age_range_slider_marks, \
+           income_range_slider_min, \
+           income_range_slider_max, \
+           income_range_slider_value, \
+           income_range_slider_marks
+
 
 @app.callback(
-        Output('state_dropdown_modal', 'options'),
-        [Input('country_checkbox_modal', 'value')],
-        )
+    Output('state_dropdown_modal', 'options'),
+    [Input('country_checkbox_modal', 'value')],
+)
 def update_state_modal_dropdown(value):
     customer = Customer()
     customer_df = pd.DataFrame(customer.get_customer_data())
@@ -199,10 +211,11 @@ def update_state_modal_dropdown(value):
         {'label': f"{brazil_state_code_map[key]}", 'value': key} for key in states
     ]
 
+
 @app.callback(
-        Output('city_dropdown_modal', 'options'),
-        [Input('state_dropdown_modal', 'value')],
-        )
+    Output('city_dropdown_modal', 'options'),
+    [Input('state_dropdown_modal', 'value')],
+)
 def update_city_modal_dropdown(value):
     customer = Customer()
     customer_df = pd.DataFrame(customer.get_customer_data())
@@ -210,6 +223,7 @@ def update_city_modal_dropdown(value):
     return [
         {'label': f"{key}", 'value': key} for key in unique_cities
     ]
+
 
 @app.callback(Output('cards-content', 'children'), Output("modal", "is_open"),
               [Input('url', 'href'), Input("open", "n_clicks"), Input("close", "n_clicks")],
@@ -226,8 +240,8 @@ def display_custom_param_list_page(href, open, close, is_open):
     elif (is_open is False or is_open is None) and open is not None:
         is_open = True
 
-
     return cards_list, is_open
+
 
 # create cards to show list of custom params
 def create_custom_params_card_list():
@@ -245,12 +259,13 @@ def create_custom_params_card_list():
             className="card-text",
         ))
         segment_separators = params.get('segment_separators', [])
-        if len(segment_separators) >= 3 and len(segment_separators)<=10:
+        if len(segment_separators) >= 3 and len(segment_separators) <= 10:
 
             class_name = chr(ord('A') + len(segment_separators) - 1)
             class_ranges = []
             for ind in range(0, len(segment_separators) - 1):
-                class_ranges.append(f"Class {class_name}: [{int(segment_separators[ind]*100)} - {int(segment_separators[ind + 1]*100)}]")
+                class_ranges.append(
+                    f"Class {class_name}: [{int(segment_separators[ind] * 100)} - {int(segment_separators[ind + 1] * 100)}]")
                 class_name = chr(ord(class_name) - 1)
             class_ranges.append(
                 f"Class {chr(ord(class_name))}: [{int(segment_separators[-1] * 100)} - {100}]")
@@ -317,9 +332,10 @@ def create_custom_params_card_list():
         ))
     return cards_list
 
+
 # define callbacks for card accordions with ids collapse-{i}
 total_accordians = SegmentationParameters().total_count()
-for index in range(1, total_accordians+1000):
+for index in range(1, total_accordians + 1000):
 
     @app.callback(
         Output(f"collapse-{index}", "is_open"),

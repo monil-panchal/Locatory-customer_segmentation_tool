@@ -14,5 +14,3 @@ geopandas==0.8.1
 gunicorn==20.0.4
 Werkzeug==1.0.1
 python-dotenv==0.15.0
-# pykerberos==1.2.1
-# python-snappy==0.5.4
