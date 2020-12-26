@@ -10,3 +10,7 @@ A customer segmentation tool, driven by AI and visualization!
 1) Setup the [locatory-backend](locatory-backend) by following its [README.MD](locatory-backend/segmentation-service/README.md)
 2) Setup the [locatory-web-application](locatory-app) by following its [README.MD](locatory-app/README.md)
 
+### Screenshots
+
+1) Locatory architecture
+![architecture](branding/Envisage_insights.png)
